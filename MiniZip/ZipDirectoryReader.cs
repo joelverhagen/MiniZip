@@ -200,14 +200,14 @@ namespace Knapcode.MiniZip
 
             while (count > 0)
             {
-                var readCount = await _stream.ReadAsync(buffer, offset, count);
-                if (readCount <= 0)
+                var read = await _stream.ReadAsync(buffer, offset, count);
+                if (read <= 0)
                 {
                     throw new EndOfStreamException();
                 }
 
-                offset += readCount;
-                count -= readCount;
+                offset += read;
+                count -= read;
             }
         }
 

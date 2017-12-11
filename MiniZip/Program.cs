@@ -27,12 +27,15 @@ namespace Knapcode.MiniZip
                 sharpZipLibTestData,
                 @"E:\data\nuget.org\top5000",
                 @"C:\Users\joelv\.nuget\packages",
+                //@"C:\Users\joelv\.nuget\packages\System.Runtime.InteropServices\4.4.0-beta-24903-02"
             }.SelectMany(p => Directory.EnumerateFiles(
                 p,
                  "*.nupkg",
-                //"0.zip",
-                SearchOption.AllDirectories))
-             .Where(x => x.Contains(@"system.runtime.interopservices.4.4.0-beta-24903-02.nupkg"))
+                SearchOption.AllDirectories).Concat(Directory.EnumerateFiles(
+                p,
+                 "*.zip",
+                SearchOption.AllDirectories)))
+             // .Where(x => x.Contains(@"system.runtime.interopservices.4.4.0-beta-24903-02.nupkg"))
             ;
 
             foreach (var p in Directory.EnumerateFiles(".", "*.zip"))
@@ -44,7 +47,7 @@ namespace Knapcode.MiniZip
             {
                 foreach (var file in testZips)
                 {
-                    Console.WriteLine(file);
+                    // Console.WriteLine(file);
                     var outcomes = new List<object>();
                     var sharpZipLibErrors = new List<string>();
 
@@ -120,7 +123,8 @@ namespace Knapcode.MiniZip
                         }
                         catch (Exception e)
                         {
-                            // Console.WriteLine("  MiniZip (buffer) error:      " + e.Message);
+                            Console.WriteLine(file);
+                            Console.WriteLine("  MiniZip (buffer) error:      " + e.Message);
                             outcomes.Add(false);
                         }
                     }
@@ -223,17 +227,34 @@ namespace Knapcode.MiniZip
                     length = response.Content.Headers.ContentLength.Value;
                 }
 
-                readRangeAsync = async (offset, count) =>
+                readRangeAsync = async (buffer, offset, count) =>
                 {
+                    // Console.WriteLine($"Read HTTP offset={offset} count={count}");
+
                     using (var request = new HttpRequestMessage(HttpMethod.Get, file))
                     {
                         request.Headers.Range = new RangeHeaderValue(offset, (offset + count) - 1);
                         using (var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead))
                         {
                             response.EnsureSuccessStatusCode();
-                            Console.WriteLine($"Read HTTP offset={offset} count={count}");
                             readCount++;
-                            return await response.Content.ReadAsByteArrayAsync();
+
+                            using (var stream = await response.Content.ReadAsStreamAsync())
+                            {
+                                var currentCount = count;
+                                var currentOffset = 0;
+
+                                int read;
+                                do
+                                {
+                                    read = await stream.ReadAsync(buffer, 0, currentCount);
+                                    currentOffset += read;
+                                    currentCount -= read;
+                                }
+                                while (read > 0 && currentCount > 0);
+
+                                return currentOffset;
+                            }
                         }
                     }
                 };
@@ -242,21 +263,28 @@ namespace Knapcode.MiniZip
             {
                 length = new FileInfo(file).Length;
 
-                readRangeAsync = async (offset, count) =>
+                readRangeAsync = async (buffer, offset, count) =>
                 {
-                    var buffer = new byte[count];
-                    int read;
-                    using (var fileStream = new FileStream(file, FileMode.Open))
-                    {
-                        fileStream.Position = offset;
-                        read = await fileStream.ReadAsync(buffer, 0, count);
-                        Console.WriteLine($"Read file offset={offset} count={count}");
-                        readCount++;
-                    }
+                    // Console.WriteLine($"Read DISK offset={offset} count={count}");
 
-                    var output = new byte[read];
-                    Buffer.BlockCopy(buffer, 0, output, 0, read);
-                    return output;
+                    using (var stream = new FileStream(file, FileMode.Open))
+                    {
+                        stream.Position = offset;
+
+                        var currentCount = count;
+                        var currentOffset = 0;
+
+                        int read;
+                        do
+                        {
+                            read = await stream.ReadAsync(buffer, 0, currentCount);
+                            currentOffset += read;
+                            currentCount -= read;
+                        }
+                        while (read > 0 && currentCount > 0);
+
+                        return currentOffset;
+                    }
                 };
             }
 

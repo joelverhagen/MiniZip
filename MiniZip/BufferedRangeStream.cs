@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
 {
-    public delegate Task<byte[]> ReadRangeAsync(long offset, int count);
+    public delegate Task<int> ReadRangeAsync(byte[] buffer, long offset, int count);
 
     /// <summary>
     /// Allows you to seek and read a stream without having access to the whole stream of data. By providing a
@@ -36,7 +36,7 @@ namespace Knapcode.MiniZip
         public override long Length { get; }
 
         public long BufferPosition { get; private set; }
-        public int BufferSize => _buffer.Length;
+        public int BufferSize { get; private set; }
 
         public override long Position
         {
@@ -92,13 +92,19 @@ namespace Knapcode.MiniZip
                     return -1;
                 }
 
-                var maximumReadCount = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
+                if (_buffer != null && Position + count > BufferPosition + _buffer.Length)
+                {
+                    throw new NotSupportedException("Reading past the end of the buffer is not supported.");
+                }
+
+                // Determine the read offset by setting a desired buffer size.
+                var desiredBufferSize = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
                 var available = Length - Position;
 
                 long readOffset;
-                if (available < maximumReadCount)
+                if (available < desiredBufferSize)
                 {
-                    readOffset = Math.Max(0, Length - maximumReadCount);
+                    readOffset = Math.Max(0, Length - desiredBufferSize);
                 }
                 else
                 {
@@ -107,19 +113,21 @@ namespace Knapcode.MiniZip
 
                 // Read up until the old position.
                 var readCount = (int)(BufferPosition - readOffset);
-                var newChunk = await _readRangeAsync(readOffset, readCount);
+                var newBuffer = new byte[readCount + (_buffer?.Length ?? 0)];
+                var actualRead = await _readRangeAsync(newBuffer, readOffset, readCount);
 
-                if (_buffer != null)
+                if (_buffer == null)
                 {
-                    // Combine the new and old chunks.
-                    var newBuffer = new byte[newChunk.Length + _buffer.Length];
-                    Buffer.BlockCopy(newChunk, 0, newBuffer, 0, newChunk.Length);
-                    Buffer.BlockCopy(_buffer, 0, newBuffer, newChunk.Length, _buffer.Length);
+                    BufferSize = actualRead;
                     _buffer = newBuffer;
+                    
                 }
                 else
                 {
-                    _buffer = newChunk;
+                    // Append the old buff
+                    Buffer.BlockCopy(_buffer, 0, newBuffer, actualRead, BufferSize);
+                    BufferSize += actualRead;
+                    _buffer = newBuffer;
                 }
                 
                 BufferPosition = readOffset;
