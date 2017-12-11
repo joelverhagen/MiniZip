@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Knapcode.MiniZip
 {
@@ -117,9 +118,27 @@ namespace Knapcode.MiniZip
                     {
                         try
                         {
-                            var count = await ReadUsingMiniZipBufferedAsync(httpClient, file);
+                            var zipDirectory = await ReadUsingMiniZipAsync(httpClient, file);
+                            var count = zipDirectory.Entries.Count;
+                            // Console.WriteLine("  MiniZip:                     " + count);
+                            outcomes.Add(JsonConvert.SerializeObject(zipDirectory));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(file);
+                            Console.WriteLine("  MiniZip:                     " + e.Message);
+                            outcomes.Add(false);
+                        }
+                    }
+
+                    if (true)
+                    {
+                        try
+                        {
+                            var zipDirectory = await ReadUsingMiniZipBufferedAsync(httpClient, file);
+                            var count = zipDirectory.Entries.Count;
                             // Console.WriteLine("  MiniZip (buffer):            " + count);
-                            outcomes.Add(count);
+                            outcomes.Add(JsonConvert.SerializeObject(zipDirectory));
                         }
                         catch (Exception e)
                         {
@@ -132,7 +151,7 @@ namespace Knapcode.MiniZip
                     // Console.WriteLine("  Same behavior:               " + (outcomes.Distinct().Count() == 1));
                     // Console.WriteLine("  Same errors:                 " + (sharpZipLibErrors.Distinct().Count() <= 1));
 
-                    if (outcomes.Distinct().Count() > 1)
+                    if (outcomes.Distinct().Count() > 1 || sharpZipLibErrors.Distinct().Count() > 1)
                     {
                         Console.WriteLine(file);
                     }
@@ -198,17 +217,26 @@ namespace Knapcode.MiniZip
             return entryCount;
         }
 
-        private static async Task<long> ReadUsingMiniZipBufferedAsync(HttpClient httpClient, string file)
+        private static async Task<ZipDirectory> ReadUsingMiniZipAsync(HttpClient httpClient, string file)
+        {
+
+            long entryCount;
+            using (var stream = await GetFileStreamAsync(httpClient, file))
+            using (var zipArchive = new ZipDirectoryReader(stream))
+            {
+                return await zipArchive.ReadEntriesAsync();
+            }
+        }
+
+        private static async Task<ZipDirectory> ReadUsingMiniZipBufferedAsync(HttpClient httpClient, string file)
         {
 
             long entryCount;
             using (var stream = await GetBufferedRangeStreamAsync(httpClient, file))
             using (var zipArchive = new ZipDirectoryReader(stream))
             {
-                entryCount = (await zipArchive.ReadEntriesAsync()).Entries.Count;
+                return await zipArchive.ReadEntriesAsync();
             }
-
-            return entryCount;
         }
 
         private static async Task<BufferedRangeStream> GetBufferedRangeStreamAsync(HttpClient httpClient, string file)
