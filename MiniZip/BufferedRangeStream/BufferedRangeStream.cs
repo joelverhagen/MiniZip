@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
 {
-    public delegate Task<int> ReadRangeAsync(byte[] buffer, long offset, int count);
-
     /// <summary>
     /// Allows you to seek and read a stream without having access to the whole stream of data. By providing a
     /// <see cref="ReadRangeAsync"/> delegate, you can fetch chunks of data on demand. The current implementation
@@ -17,13 +15,13 @@ namespace Knapcode.MiniZip
     public class BufferedRangeStream : Stream
     {
         private byte[] _buffer;
-        private readonly ReadRangeAsync _readRangeAsync;
+        private readonly IRangeReader _rangeReader;
         private readonly IBufferSizeProvider _bufferSizeProvider;
         private long _position;
 
-        public BufferedRangeStream(ReadRangeAsync readRangeAsync, long length, IBufferSizeProvider bufferSizeProvider)
+        public BufferedRangeStream(IRangeReader rangeReader, long length, IBufferSizeProvider bufferSizeProvider)
         {
-            _readRangeAsync = readRangeAsync;
+            _rangeReader = rangeReader;
             _bufferSizeProvider = bufferSizeProvider;
             Length = length;
             BufferPosition = length;
@@ -114,13 +112,12 @@ namespace Knapcode.MiniZip
                 // Read up until the old position.
                 var readCount = (int)(BufferPosition - readOffset);
                 var newBuffer = new byte[readCount + (_buffer?.Length ?? 0)];
-                var actualRead = await _readRangeAsync(newBuffer, readOffset, readCount);
+                var actualRead = await _rangeReader.ReadAsync(readOffset, newBuffer, 0, readCount);
 
                 if (_buffer == null)
                 {
                     BufferSize = actualRead;
                     _buffer = newBuffer;
-                    
                 }
                 else
                 {

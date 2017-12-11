@@ -29,9 +29,9 @@ namespace Knapcode.MiniZip
             _leaveOpen = leaveOpen;
             _disposed = 0;
 
-            if (!_stream.CanSeek)
+            if (!stream.CanRead || !stream.CanSeek)
             {
-                throw new ArgumentException("The stream is must be seekable.", nameof(stream));
+                throw new ArgumentException("The stream must be able to read and seek.", nameof(stream));
             }
         }
 
@@ -49,7 +49,7 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private bool IsDisposed => _disposed != 0;
+        public bool IsDisposed => _disposed != 0;
 
         public async Task<ZipDirectory> ReadAsync()
         {
@@ -207,11 +207,11 @@ namespace Knapcode.MiniZip
                 {
                     var dataField = new ZipDataField();
 
-                    dataField.HeaderId = await ReadLEU16Async(extraStream, _byteBuffer);
-                    dataField.DataSize = await ReadLEU16Async(extraStream, _byteBuffer);
+                    dataField.HeaderId = await extraStream.ReadLEU16Async(_byteBuffer);
+                    dataField.DataSize = await extraStream.ReadLEU16Async(_byteBuffer);
 
                     dataField.Data = new byte[dataField.DataSize];
-                    await ReadFullyAsync(extraStream, dataField.Data);
+                    await extraStream.ReadFullyAsync(dataField.Data);
 
                     dataFields.Add(dataField);
                 }
@@ -242,22 +242,22 @@ namespace Knapcode.MiniZip
 
                     if (entry.UncompressedSize == 0xffffffff)
                     {
-                        field.UncompressedSize = await ReadLEU64Async(stream, _byteBuffer);
+                        field.UncompressedSize = await stream.ReadLEU64Async(_byteBuffer);
                     }
 
                     if (entry.CompressedSize == 0xffffffff)
                     {
-                        field.CompressedSize = await ReadLEU64Async(stream, _byteBuffer);
+                        field.CompressedSize = await stream.ReadLEU64Async(_byteBuffer);
                     }
 
                     if (entry.LocalHeaderOffset == 0xffffffff)
                     {
-                        field.LocalHeaderOffset = await ReadLEU64Async(stream, _byteBuffer);
+                        field.LocalHeaderOffset = await stream.ReadLEU64Async(_byteBuffer);
                     }
 
                     if (entry.DiskNumberStart == 0xffff)
                     {
-                        field.DiskNumberStart = await ReadLEU32Async(stream, _byteBuffer);
+                        field.DiskNumberStart = await stream.ReadLEU32Async(_byteBuffer);
                     }
 
                     if (stream.Position < stream.Length)
@@ -299,82 +299,25 @@ namespace Knapcode.MiniZip
 
             return _stream.Position;
         }
-
-        private static async Task ReadFullyAsync(Stream stream, byte[] buffer)
-        {
-            var count = buffer.Length;
-            var offset = 0;
-
-            while (count > 0)
-            {
-                var read = await stream.ReadAsync(buffer, offset, count);
-                if (read <= 0)
-                {
-                    throw new EndOfStreamException();
-                }
-
-                offset += read;
-                count -= read;
-            }
-        }
-
+        
         private async Task ReadFullyAsync(byte[] buffer)
         {
-            await ReadFullyAsync(_stream, buffer);
-        }
-
-        private static async Task<byte> ReadU8Async(Stream stream, byte[] byteBuffer)
-        {
-            if (await stream.ReadAsync(byteBuffer, 0, 1) == 0)
-            {
-                throw new EndOfStreamException();
-            }
-
-            return byteBuffer[0];
-        }
-
-        private static async Task<ushort> ReadLEU16Async(Stream stream, byte[] byteBuffer)
-        {
-            int byteA = await ReadU8Async(stream, byteBuffer);
-            int byteB = await ReadU8Async(stream, byteBuffer);
-
-            return unchecked((ushort)((ushort)byteA | (ushort)(byteB << 8)));
-        }
-
-        private async Task<uint> ReadLEU32Async(Stream stream, byte[] byteBuffer)
-        {
-            var ushortA = await ReadLEU16Async(stream, byteBuffer);
-            var ushortB = await ReadLEU16Async(stream, byteBuffer);
-
-            return (uint)(ushortA | (ushortB << 16));
-        }
-
-        private async Task<ulong> ReadLEU64Async(Stream stream, byte[] byteBuffer)
-        {
-            var uintA = await ReadLEU32Async(stream, byteBuffer);
-            var uintB = await ReadLEU32Async(stream, byteBuffer);
-
-            return uintA | ((ulong)(uintB) << 32);
-        }
-
-        private async Task<byte> ReadU8Async()
-        {
-            return await ReadU8Async(_stream, _byteBuffer);
+            await _stream.ReadFullyAsync(buffer);
         }
 
         private async Task<ushort> ReadLEU16Async()
         {
-            return await ReadLEU16Async(_stream, _byteBuffer);
+            return await _stream.ReadLEU16Async(_byteBuffer);
         }
 
         private async Task<uint> ReadLEU32Async()
         {
-            return await ReadLEU32Async(_stream, _byteBuffer);
+            return await _stream.ReadLEU32Async(_byteBuffer);
         }
 
         private async Task<ulong> ReadLEU64Async()
         {
-            return await ReadLEU64Async(_stream, _byteBuffer);
+            return await _stream.ReadLEU64Async(_byteBuffer);
         }
     }
 }

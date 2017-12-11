@@ -24,10 +24,10 @@ namespace Knapcode.MiniZip.Sandbox
 
             var testZips = new string[]
             {
-                bclTestData,
-                sharpZipLibTestData,
-                @"E:\data\nuget.org\top5000",
-                @"C:\Users\joelv\.nuget\packages",
+                //bclTestData,
+                //sharpZipLibTestData,
+                //@"E:\data\nuget.org\top5000",
+                //@"C:\Users\joelv\.nuget\packages",
                 //@"C:\Users\joelv\.nuget\packages\System.Runtime.InteropServices\4.4.0-beta-24903-02"
             }.SelectMany(p => Directory.EnumerateFiles(
                 p,
@@ -36,6 +36,10 @@ namespace Knapcode.MiniZip.Sandbox
                 p,
                  "*.zip",
                 SearchOption.AllDirectories)))
+                .Concat(new string[]
+                {
+                    "https://az320820.vo.msecnd.net/packages/newtonsoft.json.11.0.1-beta1.nupkg",
+                })
             // .Where(x => x.Contains(@"system.runtime.interopservices.4.4.0-beta-24903-02.nupkg"))
             ;
 
@@ -219,8 +223,6 @@ namespace Knapcode.MiniZip.Sandbox
 
         private static async Task<ZipDirectory> ReadUsingMiniZipAsync(HttpClient httpClient, string file)
         {
-
-            long entryCount;
             using (var stream = await GetFileStreamAsync(httpClient, file))
             using (var zipArchive = new ZipDirectoryReader(stream))
             {
@@ -230,8 +232,6 @@ namespace Knapcode.MiniZip.Sandbox
 
         private static async Task<ZipDirectory> ReadUsingMiniZipBufferedAsync(HttpClient httpClient, string file)
         {
-
-            long entryCount;
             using (var stream = await GetBufferedRangeStreamAsync(httpClient, file))
             using (var zipArchive = new ZipDirectoryReader(stream))
             {
@@ -242,9 +242,8 @@ namespace Knapcode.MiniZip.Sandbox
         private static async Task<BufferedRangeStream> GetBufferedRangeStreamAsync(HttpClient httpClient, string file)
         {
             long length;
-            int readCount = 0;
 
-            ReadRangeAsync readRangeAsync;
+            IRangeReader rangeReader;
 
             if (IsUrl(file))
             {
@@ -255,69 +254,17 @@ namespace Knapcode.MiniZip.Sandbox
                     length = response.Content.Headers.ContentLength.Value;
                 }
 
-                readRangeAsync = async (buffer, offset, count) =>
-                {
-                    // Console.WriteLine($"Read HTTP offset={offset} count={count}");
-
-                    using (var request = new HttpRequestMessage(HttpMethod.Get, file))
-                    {
-                        request.Headers.Range = new RangeHeaderValue(offset, (offset + count) - 1);
-                        using (var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead))
-                        {
-                            response.EnsureSuccessStatusCode();
-                            readCount++;
-
-                            using (var stream = await response.Content.ReadAsStreamAsync())
-                            {
-                                var currentCount = count;
-                                var currentOffset = 0;
-
-                                int read;
-                                do
-                                {
-                                    read = await stream.ReadAsync(buffer, 0, currentCount);
-                                    currentOffset += read;
-                                    currentCount -= read;
-                                }
-                                while (read > 0 && currentCount > 0);
-
-                                return currentOffset;
-                            }
-                        }
-                    }
-                };
+                rangeReader = new HttpRangeReader(httpClient, new Uri(file));
             }
             else
             {
                 length = new FileInfo(file).Length;
 
-                readRangeAsync = async (buffer, offset, count) =>
-                {
-                    // Console.WriteLine($"Read DISK offset={offset} count={count}");
-
-                    using (var stream = new FileStream(file, FileMode.Open))
-                    {
-                        stream.Position = offset;
-
-                        var currentCount = count;
-                        var currentOffset = 0;
-
-                        int read;
-                        do
-                        {
-                            read = await stream.ReadAsync(buffer, 0, currentCount);
-                            currentOffset += read;
-                            currentCount -= read;
-                        }
-                        while (read > 0 && currentCount > 0);
-
-                        return currentOffset;
-                    }
-                };
+                rangeReader = new FileRangeReader(file);
             }
 
             return new BufferedRangeStream(
-                readRangeAsync,
+                rangeReader,
                 length,
                 new ZipBufferSizeProvider(4096, 4096, 2));
         }

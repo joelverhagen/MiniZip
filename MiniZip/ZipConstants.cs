@@ -4,7 +4,7 @@
     /// Source:
     /// https://github.com/icsharpcode/SharpZipLib/blob/4ad264b562579fc8d0c1f73812f69b78b49ebdee/src/ICSharpCode.SharpZipLib/Zip/ZipConstants.cs
     /// </summary>
-    public sealed class ZipConstants
+    public static class ZipConstants
     {
         /// <summary>
         /// Size of end of central record, excluding variable fields.
