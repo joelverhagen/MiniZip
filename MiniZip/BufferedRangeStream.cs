@@ -20,6 +20,7 @@ namespace MiniZip
             _readRangeAsync = readRangeAsync;
             _bufferSizeProvider = bufferSizeProvider;
             Length = length;
+            _bufferPosition = length;
             _position = 0;
         }
 
@@ -86,20 +87,37 @@ namespace MiniZip
                     return -1;
                 }
 
-                var extraCount = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
+                var maximumReadCount = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
                 var available = Length - Position;
-                long extraPosition;
-                if (available < extraCount)
+
+                long readOffset;
+                if (available < maximumReadCount)
                 {
-                    extraPosition = Math.Max(0, Length - extraCount);
+                    readOffset = Math.Max(0, Length - maximumReadCount);
                 }
                 else
                 {
-                    extraPosition = Position;
+                    readOffset = Position;
                 }
 
-                _buffer = await _readRangeAsync(extraPosition, extraCount);
-                _bufferPosition = extraPosition;
+                // Read up until the old position.
+                var readCount = (int)(_bufferPosition - readOffset);
+                var newChunk = await _readRangeAsync(readOffset, readCount);
+
+                if (_buffer != null)
+                {
+                    // Combine the new and old chunks.
+                    var newBuffer = new byte[newChunk.Length + _buffer.Length];
+                    Buffer.BlockCopy(newChunk, 0, newBuffer, 0, newChunk.Length);
+                    Buffer.BlockCopy(_buffer, 0, newBuffer, newChunk.Length, _buffer.Length);
+                    _buffer = newBuffer;
+                }
+                else
+                {
+                    _buffer = newChunk;
+                }
+                
+                _bufferPosition = readOffset;
             }
 
             return (int)(Position - _bufferPosition);

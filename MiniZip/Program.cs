@@ -34,7 +34,7 @@ namespace MiniZip
                  "*.nupkg",
                 //"0.zip",
                 SearchOption.AllDirectories))
-             // .Where(x => x.Contains(@"bower.1.3.11.nupkg"))
+             .Where(x => x.Contains(@"system.runtime.interopservices.4.4.0-beta-24903-02.nupkg"))
             ;
 
             foreach (var p in Directory.EnumerateFiles(".", "*.zip"))
@@ -265,7 +265,7 @@ namespace MiniZip
             return new BufferedRangeStream(
                 readRangeAsync,
                 length,
-                new ExponentialBufferSizeProvider(4096, 2));
+                new ZipBufferSizeProvider(4096, 4096, 2));
         }
 
         private static async Task<long> ReadUsingDotNetZipAsync(HttpClient client, string file)

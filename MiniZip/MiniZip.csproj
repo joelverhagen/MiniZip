@@ -44,7 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferedRangeStream.cs" />
-    <Compile Include="ExponentialBufferSizeProvider.cs" />
+    <Compile Include="ZipBufferSizeProvider.cs" />
     <Compile Include="IBufferSizeProvider.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
