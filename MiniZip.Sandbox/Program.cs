@@ -224,7 +224,7 @@ namespace Knapcode.MiniZip.Sandbox
             using (var stream = await GetFileStreamAsync(httpClient, file))
             using (var zipArchive = new ZipDirectoryReader(stream))
             {
-                return await zipArchive.ReadEntriesAsync();
+                return await zipArchive.ReadAsync();
             }
         }
 
@@ -235,7 +235,7 @@ namespace Knapcode.MiniZip.Sandbox
             using (var stream = await GetBufferedRangeStreamAsync(httpClient, file))
             using (var zipArchive = new ZipDirectoryReader(stream))
             {
-                return await zipArchive.ReadEntriesAsync();
+                return await zipArchive.ReadAsync();
             }
         }
 

@@ -1,4 +1,6 @@
-﻿namespace Knapcode.MiniZip
+﻿using System.Collections.Generic;
+
+namespace Knapcode.MiniZip
 {
     public class ZipEntry
     {
@@ -21,5 +23,7 @@
         public byte[] Name { get; set; }
         public byte[] ExtraField { get; set; }
         public byte[] Comment { get; set; }
+        public List<ZipDataField> DataFields { get; set; }
+        public List<Zip64DataField> Zip64DataFields { get; set; }
     }
 }

@@ -35,5 +35,15 @@
         /// End of central directory record signature.
         /// </summary>
         public const uint EndOfCentralDirectorySignature = 'P' | ('K' << 8) | (5 << 16) | (6 << 24);
+
+        /// <summary>
+        /// The header ID for the Zip64 extended information extra field.
+        /// </summary>
+        public const ushort Zip64DataFieldHeaderId = 1;
+
+        /// <summary>
+        /// The size of the Zip64 extended information extra field.
+        /// </summary>
+        public const ushort MaximumZip64DataFieldSize = 28;
     }
 }
