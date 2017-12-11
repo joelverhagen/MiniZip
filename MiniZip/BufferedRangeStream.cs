@@ -3,14 +3,20 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MiniZip
+namespace Knapcode.MiniZip
 {
     public delegate Task<byte[]> ReadRangeAsync(long offset, int count);
 
+    /// <summary>
+    /// Allows you to seek and read a stream without having access to the whole stream of data. By providing a
+    /// <see cref="ReadRangeAsync"/> delegate, you can fetch chunks of data on demand. The current implementation
+    /// maintains a single contiguous buffer in memory so reading at both ends of the stream will result in buffering
+    /// the entire inner data source. This implementation is designed to work well with reading a ZIP archive's central
+    /// directory without reading the entire ZIP archive.
+    /// </summary>
     public class BufferedRangeStream : Stream
     {
         private byte[] _buffer;
-        private long _bufferPosition;
         private readonly ReadRangeAsync _readRangeAsync;
         private readonly IBufferSizeProvider _bufferSizeProvider;
         private long _position;
@@ -20,18 +26,17 @@ namespace MiniZip
             _readRangeAsync = readRangeAsync;
             _bufferSizeProvider = bufferSizeProvider;
             Length = length;
-            _bufferPosition = length;
+            BufferPosition = length;
             _position = 0;
         }
 
         public override bool CanRead => true;
-
         public override bool CanSeek => true;
-
         public override bool CanWrite => false;
-
         public override long Length { get; }
 
+        public long BufferPosition { get; private set; }
+        public int BufferSize => _buffer.Length;
 
         public override long Position
         {
@@ -79,8 +84,8 @@ namespace MiniZip
         private async Task<int> GetBufferOffsetAsync(int count)
         {
             if ((_buffer == null
-                 || Position < _bufferPosition
-                 || Position + count > _bufferPosition + _buffer.Length))
+                 || Position < BufferPosition
+                 || Position + count > BufferPosition + _buffer.Length))
             {
                 if (Position >= Length)
                 {
@@ -101,7 +106,7 @@ namespace MiniZip
                 }
 
                 // Read up until the old position.
-                var readCount = (int)(_bufferPosition - readOffset);
+                var readCount = (int)(BufferPosition - readOffset);
                 var newChunk = await _readRangeAsync(readOffset, readCount);
 
                 if (_buffer != null)
@@ -117,10 +122,10 @@ namespace MiniZip
                     _buffer = newChunk;
                 }
                 
-                _bufferPosition = readOffset;
+                BufferPosition = readOffset;
             }
 
-            return (int)(Position - _bufferPosition);
+            return (int)(Position - BufferPosition);
         }
 
         public override long Seek(long offset, SeekOrigin origin)

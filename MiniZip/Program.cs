@@ -5,11 +5,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using Knapcode.MiniZip;
 
-namespace MiniZip
+namespace Knapcode.MiniZip
 {
     class Program
     {

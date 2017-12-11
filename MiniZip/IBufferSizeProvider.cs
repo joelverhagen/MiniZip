@@ -1,4 +1,4 @@
-﻿namespace MiniZip
+﻿namespace Knapcode.MiniZip
 {
     public interface IBufferSizeProvider
     {

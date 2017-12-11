@@ -1,7 +1,6 @@
 ﻿using System;
-using Knapcode.MiniZip;
 
-namespace MiniZip
+namespace Knapcode.MiniZip
 {
     public class ZipBufferSizeProvider : IBufferSizeProvider
     {
