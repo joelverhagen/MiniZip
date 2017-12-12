@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -38,12 +39,56 @@ namespace Knapcode.MiniZip
                     if (miniZip.Success)
                     {
                         Assert.Equal(bcl.Data.Count, miniZip.Data.Entries.Count);
-                        Assert.Equal(bcl.Data.Sum(x => x.CompressedLength), miniZip.Data.Entries.Sum(x => (long) x.GetCompressedSize()));
-                        Assert.Equal(bcl.Data.Sum(x => x.Length), miniZip.Data.Entries.Sum(x => (long) x.GetUncompressedSize()));
+
+                        var nameToBcl = bcl
+                            .Data
+                            .OrderBy(x => x.FullName)
+                            .ThenBy(x => x.CompressedLength)
+                            .ThenBy(x => x.Length)
+                            .ThenBy(x => x.ExternalAttributes)
+                            .ThenBy(x => x.LastWriteTime)
+                            .ToLookup(x => x.FullName);
+
+                        var nameToMiniZip = miniZip
+                            .Data
+                            .Entries
+                            .OrderBy(x => x.GetName())
+                            .ThenBy(x => x.CompressedSize)
+                            .ThenBy(x => x.UncompressedSize)
+                            .ThenBy(x => x.ExternalAttributes)
+                            .ThenBy(x => x.GetLastModified())
+                            .ToLookup(x => x.GetName());
+
+                        foreach (var name in nameToMiniZip.Select(x => x.Key))
+                        {
+                            var bclEntries = nameToBcl[name].ToList();
+                            var miniZipEntries = nameToMiniZip[name].ToList();
+
+                            Assert.Equal(bclEntries.Count, miniZipEntries.Count);
+                            for (var i = 0; i < bclEntries.Count; i++)
+                            {
+                                Assert.Equal((ulong)bclEntries[i].CompressedLength, miniZipEntries[i].GetCompressedSize());
+                                Assert.Equal((ulong)bclEntries[i].Length, miniZipEntries[i].GetUncompressedSize());
+                                Assert.Equal((uint)bclEntries[i].ExternalAttributes, miniZipEntries[i].ExternalAttributes);
+                                Assert.Equal(bclEntries[i].LastWriteTime.DateTime, miniZipEntries[i].GetLastModified());
+                            }
+                        }
                     }
                 }
             }
         }
+
+        private static IReadOnlyDictionary<string, KnownException> CasesHandledByBcl = new Dictionary<string, KnownException>
+        {
+            {
+                @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
+                KnownException.Create<ZipException>("Cannot find central directory.")
+            }
+        };
+
+        private static IReadOnlyDictionary<string, KnownException> CasesNotHandledByBcl = new Dictionary<string, KnownException>
+        {
+        };
 
         [Theory]
         [MemberData(nameof(TestDataPaths))]
@@ -75,24 +120,88 @@ namespace Knapcode.MiniZip
                     if (miniZip.Success)
                     {
                         Assert.Equal(sharpZipLib.Data.Count, miniZip.Data.Entries.Count);
-                        Assert.Equal(sharpZipLib.Data.Sum(x => x.CompressedSize), miniZip.Data.Entries.Sum(x => (long)x.GetCompressedSize()));
-                        Assert.Equal(sharpZipLib.Data.Sum(x => x.Size), miniZip.Data.Entries.Sum(x => (long)x.GetUncompressedSize()));
+
+                        if (DifferencesFromSharpZipLib.TryGetValue(path, out var mutate))
+                        {
+                            mutate(miniZip.Data);
+                        }
+
+                        var nameToSharpZipLib = sharpZipLib
+                            .Data
+                            .OrderBy(x => x.Name)
+                            .ThenBy(x => x.CompressedSize)
+                            .ThenBy(x => x.Size)
+                            .ThenBy(x => x.ExternalFileAttributes)
+                            .ThenBy(x => x.DateTime)
+                            .ToLookup(x => x.Name);
+
+                        var nameToMiniZip = miniZip
+                            .Data
+                            .Entries
+                            .OrderBy(x => x.GetName())
+                            .ThenBy(x => x.CompressedSize)
+                            .ThenBy(x => x.UncompressedSize)
+                            .ThenBy(x => x.ExternalAttributes)
+                            .ThenBy(x => x.GetLastModified())
+                            .ToLookup(x => x.GetName());
+
+                        foreach (var name in nameToMiniZip.Select(x => x.Key))
+                        {
+                            var sharpZipLibEntries = nameToSharpZipLib[name].ToList();
+                            var miniZipEntries = nameToMiniZip[name].ToList();
+
+                            Assert.Equal(sharpZipLibEntries.Count, miniZipEntries.Count);
+                            for (var i = 0; i < sharpZipLibEntries.Count; i++)
+                            {
+                                Assert.Equal((ulong)sharpZipLibEntries[i].CompressedSize, miniZipEntries[i].GetCompressedSize());
+                                Assert.Equal((ulong)sharpZipLibEntries[i].Size, miniZipEntries[i].GetUncompressedSize());
+                                Assert.Equal((uint)sharpZipLibEntries[i].ExternalFileAttributes, miniZipEntries[i].ExternalAttributes);
+                                Assert.Equal(sharpZipLibEntries[i].DateTime, miniZipEntries[i].GetLastModified());
+                            }
+                        }
                     }
                 }
             }
         }
 
-        private static IReadOnlyDictionary<string, KnownException> CasesHandledByBcl = new Dictionary<string, KnownException>
+        private static IReadOnlyDictionary<string, Action<ZipDirectory>> DifferencesFromSharpZipLib = new Dictionary<string, Action<ZipDirectory>>
         {
             {
-                @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
-                KnownException.Create<ZipException>("Cannot find central directory.")
+                @"System.IO.Compression\badzipfiles\invaliddate.zip",
+                zipDirectory =>
+                {
+                    // SharpZipLib gives back 2064-02-29T23:10:42 instead of 2064-02-30T27:10:42.
+                    var entry = zipDirectory.Entries.Single();
+
+                    entry.LastModifiedDate &= 0b1111_1111_1110_0000;
+                    entry.LastModifiedDate |= 29;
+
+                    entry.LastModifiedTime &= 0b0000_0111_1111_1111;
+                    entry.LastModifiedTime |= 23 << 11;
+                }
+            },
+            {
+                @"System.IO.Compression\compat\backslashes_FromUnix.zip",
+                ConvertToForwardSlashes
+            },
+            {
+                @"System.IO.Compression\compat\backslashes_FromWindows.zip",
+                ConvertToForwardSlashes
+            },
+            {
+                @"System.IO.Compression\StrangeZipFiles\dataDescriptor.zip",
+                ConvertToForwardSlashes
             }
         };
 
-        private static IReadOnlyDictionary<string, KnownException> CasesNotHandledByBcl = new Dictionary<string, KnownException>
+        private static void ConvertToForwardSlashes(ZipDirectory zipDirectory)
         {
-        };
+            foreach (var zipEntry in zipDirectory.Entries)
+            {
+                var fixedName = zipEntry.GetName().Replace(@"\", "/");
+                zipEntry.Name = Encoding.ASCII.GetBytes(fixedName);
+            }
+        }
 
         private static IReadOnlyDictionary<string, KnownException> CasesHandledBySharpZipLib = new Dictionary<string, KnownException>
         {
