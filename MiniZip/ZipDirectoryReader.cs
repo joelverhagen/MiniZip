@@ -29,9 +29,14 @@ namespace Knapcode.MiniZip
             _leaveOpen = leaveOpen;
             _disposed = 0;
 
-            if (!stream.CanRead || !stream.CanSeek)
+            if (!stream.CanSeek)
             {
-                throw new ArgumentException("The stream must be able to read and seek.", nameof(stream));
+                throw new ArgumentException(Strings.StreamMustSupportSeek, nameof(stream));
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new ArgumentException(Strings.StreamMustSupportRead, nameof(stream));
             }
         }
 
@@ -68,7 +73,7 @@ namespace Knapcode.MiniZip
 
             if (zip.OffsetAfterEndOfCentralDirectory < 0)
             {
-                throw new ZipException("Cannot find central directory.");
+                throw new ZipException(Strings.CannotFindCentralDirectory);
             }
 
             zip.NumberOfThisDisk = await ReadLEU16Async();
@@ -103,7 +108,7 @@ namespace Knapcode.MiniZip
 
                 if (zip.Zip64.OffsetAfterEndOfCentralDirectoryLocator < 0)
                 {
-                    throw new ZipException("Cannot find Zip64 locator");
+                    throw new ZipException(Strings.CannotFindZip64Locator);
                 }
 
                 zip.Zip64.DiskWithStartOfEndOfCentralDirectory = await ReadLEU32Async();
@@ -114,7 +119,7 @@ namespace Knapcode.MiniZip
 
                 if (await ReadLEU32Async() != ZipConstants.Zip64CentralFileHeaderSignature)
                 {
-                    throw new ZipException($"Invalid Zip64 Central directory signature at {zip.Zip64.EndOfCentralDirectoryOffset:X}");
+                    throw new ZipException(Strings.InvalidZip64CentralDirectorySignature);
                 }
 
                 zip.Zip64.SizeOfCentralDirectoryRecord = await ReadLEU64Async();
@@ -137,7 +142,7 @@ namespace Knapcode.MiniZip
                     || (zip.Zip64.CentralDirectorySize != zip.CentralDirectorySize && zip.CentralDirectorySize != 0xffffffff)
                     || (zip.Zip64.OffsetOfCentralDirectory != zip.OffsetOfCentralDirectory && zip.OffsetOfCentralDirectory != 0xffffffff))
                 {
-                    throw new ZipException("The Zip64 metadata is not consistent with the non-Zip64 metadata.");
+                    throw new ZipException(Strings.InconsistentZip64Metadata);
                 }
             }
             else
@@ -161,7 +166,7 @@ namespace Knapcode.MiniZip
         {
             if (await ReadLEU32Async() != ZipConstants.CentralHeaderSignature)
             {
-                throw new ZipException("Wrong central directory signature.");
+                throw new ZipException(Strings.InvalidCentralDirectorySignature);
             }
 
             var entry = new ZipEntry();
@@ -233,7 +238,7 @@ namespace Knapcode.MiniZip
 
                 if (dataField.DataSize > ZipConstants.MaximumZip64DataFieldSize)
                 {
-                    throw new ZipException($"A Zip64 extended information extra field must have exactly {ZipConstants.MaximumZip64DataFieldSize} bytes.");
+                    throw new ZipException(Strings.InvalidZip64ExtendedInformationLength);
                 }
 
                 using (var stream = new MemoryStream(dataField.Data))
@@ -262,7 +267,7 @@ namespace Knapcode.MiniZip
 
                     if (stream.Position < stream.Length)
                     {
-                        throw new ZipException($"Not all of the Zip64 extended information extra field was read.");
+                        throw new ZipException(Strings.NotAllZip64ExtendedInformationWasRead);
                     }
 
                     zip64DataFields.Add(field);

@@ -25,12 +25,7 @@
         /// Signature for Zip64 central directory locator.
         /// </summary>
         public const uint Zip64EndOfCentralDirectoryLocatorSignature = 'P' | ('K' << 8) | (6 << 16) | (7 << 24);
-
-        /// <summary>
-        /// Central header digitial signature.
-        /// </summary>
-        public const uint CentralHeaderDigitalSignature = 'P' | ('K' << 8) | (5 << 16) | (5 << 24);
-
+        
         /// <summary>
         /// End of central directory record signature.
         /// </summary>

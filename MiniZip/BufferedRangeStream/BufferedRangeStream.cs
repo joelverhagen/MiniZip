@@ -46,7 +46,7 @@ namespace Knapcode.MiniZip
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException("The position must be a non-negative number.", nameof(value));
+                    throw new ArgumentOutOfRangeException(Strings.PositionMustBeNonNegative, nameof(value));
                 }
 
                 _position = value;
@@ -92,7 +92,7 @@ namespace Knapcode.MiniZip
 
                 if (_buffer != null && Position + count > BufferPosition + _buffer.Length)
                 {
-                    throw new NotSupportedException("Reading past the end of the buffer is not supported.");
+                    throw new NotSupportedException();
                 }
 
                 // Determine the read offset by setting a desired buffer size.

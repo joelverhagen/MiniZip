@@ -20,7 +20,21 @@ namespace Knapcode.MiniZip
 
         public static string GetName(this ZipEntry entry)
         {
-            return Encoding.UTF8.GetString(entry.Name);
+            return entry.GetName(encoding: null);
+        }
+
+        public static string GetName(this ZipEntry entry, Encoding encoding)
+        {
+            if (encoding == null)
+            {
+                encoding = Encoding.GetEncoding(codepage: 0);
+            }
+            else if (encoding != Encoding.UTF8 && (entry.Flags & (ushort)ZipEntryFlags.UTF8) != 0)
+            {
+                throw new ArgumentException(Strings.UTF8Mismatch);
+            }
+
+            return encoding.GetString(entry.Name);
         }
 
         public static DateTime GetLastModified(this ZipEntry entry)

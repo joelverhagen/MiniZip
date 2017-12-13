@@ -19,7 +19,12 @@ namespace Knapcode.MiniZip
             {
                 if (!stream.CanSeek)
                 {
-                    throw new InvalidOperationException("The stream must support seeking.");
+                    throw new InvalidOperationException(Strings.StreamMustSupportSeek);
+                }
+
+                if (!stream.CanRead)
+                {
+                    throw new InvalidOperationException(Strings.StreamMustSupportRead);
                 }
 
                 stream.Position = srcOffset;
