@@ -41,7 +41,7 @@ namespace Knapcode.MiniZip
 
             try
             {
-                _nextValue *= _exponent;
+                _nextValue = checked(_nextValue  * _exponent);
             }
             catch (OverflowException)
             {

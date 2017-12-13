@@ -1,25 +1,18 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
 {
-    public class FileRangeReader : IRangeReader
+    public class FileRangeReader : SeekableStreamRangeReader
     {
-        private readonly string _path;
-
-        public FileRangeReader(string path)
+        public FileRangeReader(string path) : base(GetOpenStreamAsync(path))
         {
-            _path = path;
         }
 
-        public async Task<int> ReadAsync(long srcOffset, byte[] dst, int dstOffset, int count)
+        private static Func<Task<Stream>> GetOpenStreamAsync(string path)
         {
-            using (var stream = new FileStream(_path, FileMode.Open, FileAccess.Read))
-            {
-                stream.Position = srcOffset;
-
-                return await stream.ReadToEndAsync(dst, dstOffset, count);
-            }
+            return () => Task.FromResult<Stream>(new FileStream(path, FileMode.Open, FileAccess.Read));
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Knapcode.MiniZip
 {
     /// <summary>
     /// Allows you to seek and read a stream without having access to the whole stream of data. By providing a
-    /// <see cref="ReadRangeAsync"/> delegate, you can fetch chunks of data on demand. The current implementation
+    /// <see cref="IRangeReader"/>, you can fetch chunks of data on demand. The current implementation
     /// maintains a single contiguous buffer in memory so reading at both ends of the stream will result in buffering
     /// the entire inner data source. This implementation is designed to work well with reading a ZIP archive's central
     /// directory without reading the entire ZIP archive.
@@ -24,7 +24,7 @@ namespace Knapcode.MiniZip
             _rangeReader = rangeReader;
             _bufferSizeProvider = bufferSizeProvider;
             Length = length;
-            BufferPosition = length;
+            BufferPosition = -1;
             _position = 0;
         }
 
@@ -76,7 +76,7 @@ namespace Knapcode.MiniZip
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return ReadAsync(buffer, offset, count).Result;
+            throw new NotSupportedException();
         }
 
         private async Task<int> GetBufferOffsetAsync(int count)
@@ -97,6 +97,11 @@ namespace Knapcode.MiniZip
 
                 // Determine the read offset by setting a desired buffer size.
                 var desiredBufferSize = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
+                if (desiredBufferSize > Length)
+                {
+                    desiredBufferSize = (int)Length;
+                }
+
                 var available = Length - Position;
 
                 long readOffset;
@@ -110,7 +115,7 @@ namespace Knapcode.MiniZip
                 }
 
                 // Read up until the old position.
-                var readCount = (int)(BufferPosition - readOffset);
+                var readCount =  BufferPosition < 0 ? desiredBufferSize : (int)(BufferPosition - readOffset);
                 var newBuffer = new byte[readCount + (_buffer?.Length ?? 0)];
                 var actualRead = await _rangeReader.ReadAsync(readOffset, newBuffer, 0, readCount);
 
