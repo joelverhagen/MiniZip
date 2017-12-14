@@ -40,6 +40,9 @@ namespace Knapcode.MiniZip
 
                     // Assert
                     TestUtility.VerifyJsonEquals(a.Data, b.Data);
+                    Assert.Equal(a.Success, b.Success);
+                    Assert.Equal(a.Exception?.Message, b.Exception?.Message);
+                    Assert.Equal(a.Exception?.GetType(), b.Exception?.GetType());
                 }
             }
         }
@@ -63,6 +66,9 @@ namespace Knapcode.MiniZip
 
                     // Assert
                     TestUtility.VerifyJsonEquals(a.Data, b.Data);
+                    Assert.Equal(a.Success, b.Success);
+                    Assert.Equal(a.Exception?.Message, b.Exception?.Message);
+                    Assert.Equal(a.Exception?.GetType(), b.Exception?.GetType());
                 }
             }
         }
