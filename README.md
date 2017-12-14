@@ -13,14 +13,14 @@ analysis.
 
 ## Example
 
-Take a look at the following sample code to get an idea of how this thing is used.
-
+Take a look at the following sample code to get an idea of how this thing is used:
 https://github.com/joelverhagen/MiniZip/blob/master/MiniZip.Sandbox/Program.cs
 
 Here's a smaller example if you're into that.
 
 ```csharp
 var url = "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg";
+
 using (var httpClient = new HttpClient())
 {
     var httpZipProvider = new HttpZipProvider(httpClient);
@@ -30,14 +30,16 @@ using (var httpClient = new HttpClient())
         var zipDirectory = await zipDirectoryReader.ReadAsync();
 
         Console.WriteLine("Top 5 ZIP entries by compressed size:");
+
         var entries = zipDirectory
             .Entries
             .OrderByDescending(x => x.GetCompressedSize())
             .Take(5)
             .ToList();
+
         for (var i = 0; i < entries.Count; i++)
         {
-            Console.WriteLine($"{i + 1}. {entries[i].GetName()} ({entries[i].GetCompressedSize():N0} bytes)");
+            Console.WriteLine($"{i + 1}. {entries[i].GetName()}");
         }
     }
 }

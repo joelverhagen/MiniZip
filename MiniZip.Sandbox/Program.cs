@@ -33,7 +33,7 @@ namespace Knapcode.MiniZip
                         .ToList();
                     for (var i = 0; i < entries.Count; i++)
                     {
-                        Console.WriteLine($"{i + 1}. {entries[i].GetName()} ({entries[i].GetCompressedSize():N0} bytes)");
+                        Console.WriteLine($"{i + 1}. {entries[i].GetName()}");
                     }
                 }
             }
