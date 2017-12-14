@@ -185,7 +185,6 @@ namespace Knapcode.MiniZip
                 // Act & Assert
                 var exception = await Assert.ThrowsAsync<NotSupportedException>(
                     () => _target.ReadAsync(_outputBuffer, 0, 5));
-                Assert.Contains("Reading past the end of the buffer is not supported.", exception.Message);
                 VerifyUntouchedOutputBuffer();
                 VerifyNoReads();
                 await VerifyInternalBufferAsync(80, 10);

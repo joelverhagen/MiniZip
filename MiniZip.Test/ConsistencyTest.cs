@@ -207,11 +207,11 @@ namespace Knapcode.MiniZip
         {
             {
                 @"SharpZipLib\ZipFileHandling.EmbeddedArchive\1.zip",
-                KnownException.Create<ZipException>("Wrong central directory signature.")
+                KnownException.Create<ZipException>(Strings.InvalidCentralDirectorySignature)
             },
             {
                 @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
-                KnownException.Create<ZipException>("Wrong central directory signature.")
+                KnownException.Create<ZipException>(Strings.InvalidCentralDirectorySignature)
             }
         };
 
