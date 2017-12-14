@@ -106,37 +106,6 @@ Top 5 ZIP entries by compressed size:
 
 ========================================
 
-==> HEAD https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
-
-<== 200 OK
-    Accept-Ranges: bytes
-    Content-Length: 1252048
-
-==> GET https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
-    Range: bytes=1252026-1252047
-
-<== 206 Partial Content
-    Accept-Ranges: bytes
-    Content-Length: 22
-    Content-Range: bytes 1252026-1252047/1252048
-
-==> GET https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
-    Range: bytes=1247952-1252025
-
-<== 206 Partial Content
-    Accept-Ranges: bytes
-    Content-Length: 4074
-    Content-Range: bytes 1247952-1252025/1252048
-
-Top 5 ZIP entries by compressed size:
-1. lib/Net40/HtmlAgilityPack.pdb (71,172 bytes)
-2. lib/Net45/HtmlAgilityPack.pdb (71,148 bytes)
-3. lib/Net40-client/HtmlAgilityPack.pdb (71,131 bytes)
-4. lib/Net20/HtmlAgilityPack.pdb (69,250 bytes)
-5. lib/uap10.0/HtmlAgilityPack.pdb (67,398 bytes)
-
-========================================
-
 Total ZIP files checked:    5
 Total HTTP requests:        15
 Total Content-Length bytes: 10,138,058
