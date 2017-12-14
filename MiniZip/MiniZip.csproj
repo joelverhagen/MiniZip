@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
-    <PackageVersion>0.1.0</PackageVersion>
+    <Version>0.1.0</Version>
     <Authors>Joel Verhagen</Authors>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/joelverhagen/MiniZip/master/LICENSE</PackageLicenseUrl>
