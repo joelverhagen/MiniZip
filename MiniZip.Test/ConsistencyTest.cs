@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using FluentAssertions;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace Knapcode.MiniZip
@@ -41,7 +39,6 @@ namespace Knapcode.MiniZip
                     var b = await TestUtility.ReadWithMiniZipAsync(bufferedRangeStream);
 
                     // Assert
-                    b.Should().Be(a);
                     TestUtility.VerifyJsonEquals(a.Data, b.Data);
                 }
             }
@@ -65,7 +62,6 @@ namespace Knapcode.MiniZip
                     var b = await TestUtility.ReadWithMiniZipAsync(bufferedRangeStream);
 
                     // Assert
-                    b.Should().Be(a);
                     TestUtility.VerifyJsonEquals(a.Data, b.Data);
                 }
             }
