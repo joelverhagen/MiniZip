@@ -11,6 +11,17 @@ request header, you can determine all of the files in a ZIP archive without down
 Comcast has a 1 terabyte data limit on my line so this is a necessary measure for my efforts around NuGet package
 analysis.
 
+## Install
+
+You can install this package via [NuGet](https://www.nuget.org/):
+
+```
+dotnet add package Knapcode.MiniZip
+```
+
+For more information about the package, see the
+[package details page on NuGet.org](https://www.nuget.org/packages/Knapcode.MiniZip).
+
 ## Example
 
 Take a look at the following sample code to get an idea of how this thing is used:
