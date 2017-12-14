@@ -2,9 +2,9 @@
 
 namespace Knapcode.MiniZip
 {
-    public class ZipException : Exception
+    public class MiniZipException : Exception
     {
-        public ZipException(string message)
+        public MiniZipException(string message)
             : base(message)
         {
         }

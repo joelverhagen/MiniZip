@@ -146,7 +146,7 @@ namespace Knapcode.MiniZip
         {
             {
                 @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
-                KnownException.Create<ZipException>("Cannot find central directory.")
+                KnownException.Create<MiniZipException>("Cannot find central directory.")
             }
         };
 
@@ -271,11 +271,11 @@ namespace Knapcode.MiniZip
         {
             {
                 @"SharpZipLib\ZipFileHandling.EmbeddedArchive\1.zip",
-                KnownException.Create<ZipException>(Strings.InvalidCentralDirectorySignature)
+                KnownException.Create<MiniZipException>(Strings.InvalidCentralDirectorySignature)
             },
             {
                 @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
-                KnownException.Create<ZipException>(Strings.InvalidCentralDirectorySignature)
+                KnownException.Create<MiniZipException>(Strings.InvalidCentralDirectorySignature)
             }
         };
 
