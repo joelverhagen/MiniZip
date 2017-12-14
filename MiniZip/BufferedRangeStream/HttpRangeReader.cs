@@ -29,13 +29,12 @@ namespace Knapcode.MiniZip
                 {
                     if (response.StatusCode != HttpStatusCode.PartialContent)
                     {
-                        throw new MiniZipException("The HTTP response did not have the expected status code HTTP " +
-                            "206 Partial Content.");
+                        throw new MiniZipException(Strings.NonPartialContentHttpResponse);
                     }
 
                     if (response.Content.Headers.ContentRange == null)
                     {
-                        throw new MiniZipException("The Content-Range header was expected but not found.");
+                        throw new MiniZipException(Strings.ContentRangeHeaderNotFound);
                     }
 
                     if (!response.Content.Headers.ContentRange.HasRange
@@ -43,7 +42,7 @@ namespace Knapcode.MiniZip
                         || response.Content.Headers.ContentRange.From != srcOffset
                         || response.Content.Headers.ContentRange.To != (srcOffset + count) - 1)
                     {
-                        throw new MiniZipException("The Content-Range header has an unexpected value.");
+                        throw new MiniZipException(Strings.InvalidContentRangeHeader);
                     }
                     
                     using (var stream = await response.Content.ReadAsStreamAsync())

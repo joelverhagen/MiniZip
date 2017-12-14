@@ -79,6 +79,15 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Content-Range header was expected but not found..
+        /// </summary>
+        internal static string ContentRangeHeaderNotFound {
+            get {
+                return ResourceManager.GetString("ContentRangeHeaderNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Zip64 metadata is not consistent with the non-Zip64 metadata..
         /// </summary>
         internal static string InconsistentZip64Metadata {
@@ -97,6 +106,15 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Content-Range header has an unexpected value..
+        /// </summary>
+        internal static string InvalidContentRangeHeader {
+            get {
+                return ResourceManager.GetString("InvalidContentRangeHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid Zip64 central directory signature found..
         /// </summary>
         internal static string InvalidZip64CentralDirectorySignature {
@@ -111,6 +129,15 @@ namespace Knapcode.MiniZip {
         internal static string InvalidZip64ExtendedInformationLength {
             get {
                 return ResourceManager.GetString("InvalidZip64ExtendedInformationLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The HTTP response did not have the expected status code HTTP 206 Partial Content..
+        /// </summary>
+        internal static string NonPartialContentHttpResponse {
+            get {
+                return ResourceManager.GetString("NonPartialContentHttpResponse", resourceCulture);
             }
         }
         

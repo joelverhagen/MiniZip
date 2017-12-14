@@ -123,17 +123,26 @@
   <data name="CannotFindZip64Locator" xml:space="preserve">
     <value>Cannot find Zip64 locator.</value>
   </data>
+  <data name="ContentRangeHeaderNotFound" xml:space="preserve">
+    <value>The Content-Range header was expected but not found.</value>
+  </data>
   <data name="InconsistentZip64Metadata" xml:space="preserve">
     <value>The Zip64 metadata is not consistent with the non-Zip64 metadata.</value>
   </data>
   <data name="InvalidCentralDirectorySignature" xml:space="preserve">
     <value>Invalid central directory signature found.</value>
   </data>
+  <data name="InvalidContentRangeHeader" xml:space="preserve">
+    <value>The Content-Range header has an unexpected value.</value>
+  </data>
   <data name="InvalidZip64CentralDirectorySignature" xml:space="preserve">
     <value>Invalid Zip64 central directory signature found.</value>
   </data>
   <data name="InvalidZip64ExtendedInformationLength" xml:space="preserve">
     <value>Invalid length for Zip64 extended information extra field.</value>
+  </data>
+  <data name="NonPartialContentHttpResponse" xml:space="preserve">
+    <value>The HTTP response did not have the expected status code HTTP 206 Partial Content.</value>
   </data>
   <data name="NotAllZip64ExtendedInformationWasRead" xml:space="preserve">
     <value>Not all of the Zip64 extended information extra field was read.</value>
