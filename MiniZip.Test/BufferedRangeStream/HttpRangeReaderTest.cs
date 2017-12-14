@@ -15,8 +15,6 @@ namespace Knapcode.MiniZip
 {
     public class HttpRangeReaderTest
     {
-        private const string HostedTestDataDirectory = "TestData";
-
         public class ReadAsync : IDisposable
         {
             private readonly TestDirectory _directory;
@@ -35,18 +33,9 @@ namespace Knapcode.MiniZip
                 _content = Enumerable.Range(0, 100).Select(x => (byte)x).ToArray();
                 File.WriteAllBytes(Path.Combine(_directory, _fileName), _content);
 
-                _server = new TestServer(new WebHostBuilder().Configure(app =>
-                {
-                    app.UseStaticFiles();
-                    app.UseStaticFiles(new StaticFileOptions()
-                    {
-                        FileProvider = new PhysicalFileProvider(_directory),
-                        RequestPath = new PathString("/" + HostedTestDataDirectory),
-                        ServeUnknownFileTypes = true,
-                    });
-                }));
+                _server = TestUtility.GetTestServer(_directory);
                 _client = _server.CreateClient();
-                _requestUri = new Uri(new Uri(_server.BaseAddress, HostedTestDataDirectory + "/"), _fileName);
+                _requestUri = new Uri(new Uri(_server.BaseAddress, TestUtility.TestServerDirectory + "/"), _fileName);
 
                 _outputBuffer = new byte[_content.Length];
 

@@ -87,7 +87,6 @@ namespace Knapcode.MiniZip
             await ReadFullyAsync(zip.Comment);
 
             // Check if the archive is Zip64.
-            zip.IsZip64 = false;
             long offsetOfCentralDirectory;
             ulong entriesInThisDisk;
             if (zip.NumberOfThisDisk == 0xffff
@@ -97,7 +96,6 @@ namespace Knapcode.MiniZip
                 || zip.CentralDirectorySize == 0xffffffff
                 || zip.OffsetOfCentralDirectory == 0xffffffff)
             {
-                zip.IsZip64 = true;
                 zip.Zip64 = new Zip64Directory();
 
                 zip.Zip64.OffsetAfterEndOfCentralDirectoryLocator = await LocateBlockWithSignatureAsync(

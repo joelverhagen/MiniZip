@@ -3,22 +3,51 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.FileProviders;
+using Newtonsoft.Json;
+using Xunit;
 
 namespace Knapcode.MiniZip
 {
     public static class TestUtility
     {
-        private static readonly string TestDataDirectory = Path.GetFullPath("TestData");
-        
+        public static readonly string TestDataDirectory = Path.GetFullPath("TestData");
+        public const string TestServerDirectory = "TestData";
+
         public static IReadOnlyList<string> TestDataPaths => Directory
             .EnumerateFiles(TestDataDirectory, "*", SearchOption.AllDirectories)
             .Select(x => GetRelativePath(x, TestDataDirectory))
             .ToList();
 
+        public static void VerifyJsonEquals<T>(T expected, T actual)
+        {
+            var expectedJson = JsonConvert.SerializeObject(expected, Formatting.Indented);
+            var actualJson = JsonConvert.SerializeObject(actual, Formatting.Indented);
+            Assert.Equal(expectedJson, actualJson);
+        }
+
         public static MemoryStream BufferTestData(string path)
         {
             var fullPath = Path.Combine(TestDataDirectory, path);
             return new MemoryStream(File.ReadAllBytes(fullPath));
+        }
+
+        public static TestServer GetTestServer(string directory)
+        {
+            return new TestServer(new WebHostBuilder().Configure(app =>
+            {
+                app.UseStaticFiles();
+                app.UseStaticFiles(new StaticFileOptions()
+                {
+                    FileProvider = new PhysicalFileProvider(directory),
+                    RequestPath = new PathString("/" + TestServerDirectory),
+                    ServeUnknownFileTypes = true,
+                });
+            }));
         }
 
         public static async Task<MiniZipResult> ReadWithMiniZipAsync(Stream stream)

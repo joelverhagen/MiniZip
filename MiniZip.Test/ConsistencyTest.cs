@@ -1,14 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Knapcode.MiniZip
 {
     public class ConsistencyTest
     {
+        [Theory]
+        [MemberData(nameof(TestDataPaths))]
+        public async Task WithSelfUsingHttpRangeReader(string path)
+        {
+            // Arrange
+            using (var memoryStream = TestUtility.BufferTestData(path))
+            using (var server = TestUtility.GetTestServer(TestUtility.TestDataDirectory))
+            using (var client = server.CreateClient())
+            {
+                var requestUri = new Uri(new Uri(server.BaseAddress, TestUtility.TestServerDirectory + "/"), path);
+
+                long length;
+                using (var lengthRequest = new HttpRequestMessage(HttpMethod.Head, requestUri))
+                using (var lengthResponse = await client.SendAsync(lengthRequest))
+                {
+                    lengthResponse.EnsureSuccessStatusCode();
+                    length = lengthResponse.Content.Headers.ContentLength.Value;
+                }
+
+                var httpRangeReader = new HttpRangeReader(client, requestUri);
+                var bufferSizeProvider = new ZipBufferSizeProvider(secondBufferSize: 1, exponent: 2);
+                using (var bufferedRangeStream = new BufferedRangeStream(httpRangeReader, length, bufferSizeProvider))
+                {
+                    // Act
+                    var a = await TestUtility.ReadWithMiniZipAsync(memoryStream);
+                    var b = await TestUtility.ReadWithMiniZipAsync(bufferedRangeStream);
+
+                    // Assert
+                    b.Should().Be(a);
+                    TestUtility.VerifyJsonEquals(a.Data, b.Data);
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataPaths))]
+        public async Task WithSelfUsingFileRangeReader(string path)
+        {
+            // Arrange
+            using (var memoryStream = TestUtility.BufferTestData(path))
+            {
+                var fullPath = Path.Combine(TestUtility.TestDataDirectory, path);
+                var length = new FileInfo(fullPath).Length;
+                var fileRangeReader = new FileRangeReader(fullPath);
+                var bufferSizeProvider = new ZipBufferSizeProvider(secondBufferSize: 1, exponent: 2);
+                using (var bufferedRangeStream = new BufferedRangeStream(fileRangeReader, length, bufferSizeProvider))
+                {
+                    // Act
+                    var a = await TestUtility.ReadWithMiniZipAsync(memoryStream);
+                    var b = await TestUtility.ReadWithMiniZipAsync(bufferedRangeStream);
+
+                    // Assert
+                    b.Should().Be(a);
+                    TestUtility.VerifyJsonEquals(a.Data, b.Data);
+                }
+            }
+        }
+
         [Theory]
         [MemberData(nameof(TestDataPaths))]
         public async Task WithBcl(string path)
