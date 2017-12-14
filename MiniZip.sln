@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniZip.Test", "MiniZip.Test\MiniZip.Test.csproj", "{C76E2794-8411-4124-9F13-14263C7FACEC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniZip.Test", "MiniZip.Test\MiniZip.Test.csproj", "{C76E2794-8411-4124-9F13-14263C7FACEC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniZip.Sandbox", "MiniZip.Sandbox\MiniZip.Sandbox.csproj", "{1A043D05-699B-4268-9B27-0E2411DE8D34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniZip", "MiniZip\MiniZip.csproj", "{64925A3F-B787-407F-8482-965381B1C571}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniZip", "MiniZip\MiniZip.csproj", "{64925A3F-B787-407F-8482-965381B1C571}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{09524EDA-0A1E-466C-AC04-1FE7AD9D9E11}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

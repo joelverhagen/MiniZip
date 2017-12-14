@@ -11,10 +11,35 @@ namespace Knapcode.MiniZip
     {
         public static void Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
+            LargeAsync().GetAwaiter().GetResult();
         }
 
-        private static async Task MainAsync()
+        private static async Task SmallAsync()
+        {
+            var url = "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg";
+            using (var httpClient = new HttpClient())
+            {
+                var httpZipProvider = new HttpZipProvider(httpClient);
+
+                using (var zipDirectoryReader = await httpZipProvider.GetReaderAsync(new Uri(url)))
+                {
+                    var zipDirectory = await zipDirectoryReader.ReadAsync();
+
+                    Console.WriteLine("Top 5 ZIP entries by compressed size:");
+                    var entries = zipDirectory
+                        .Entries
+                        .OrderByDescending(x => x.GetCompressedSize())
+                        .Take(5)
+                        .ToList();
+                    for (var i = 0; i < entries.Count; i++)
+                    {
+                        Console.WriteLine($"{i + 1}. {entries[i].GetName()} ({entries[i].GetCompressedSize():N0} bytes)");
+                    }
+                }
+            }
+        }
+
+        private static async Task LargeAsync()
         {
             // Use the top 5 NuGet packages as an example.
             var urls = new[]
