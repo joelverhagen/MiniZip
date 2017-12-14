@@ -9,11 +9,6 @@ namespace Knapcode.MiniZip
         private readonly int _exponent;
         private bool _overflow;
         private bool _isFirst;
-        
-        public ZipBufferSizeProvider(int secondBufferSize, int exponent)
-            : this(ZipConstants.EndOfCentralRecordBaseSize, secondBufferSize, exponent)
-        {
-        }
 
         public ZipBufferSizeProvider(int firstBufferSize, int secondBufferSize, int exponent)
         {

@@ -61,6 +61,24 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Accept-Ranges header must contain the &quot;{0}&quot; value..
+        /// </summary>
+        internal static string AcceptRangesBytesValueNotFoundFormat {
+            get {
+                return ResourceManager.GetString("AcceptRangesBytesValueNotFoundFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Accept-Ranges header was expected but not found..
+        /// </summary>
+        internal static string AcceptRangesHeaderNotFound {
+            get {
+                return ResourceManager.GetString("AcceptRangesHeaderNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find central directory..
         /// </summary>
         internal static string CannotFindCentralDirectory {
@@ -75,6 +93,15 @@ namespace Knapcode.MiniZip {
         internal static string CannotFindZip64Locator {
             get {
                 return ResourceManager.GetString("CannotFindZip64Locator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Content-Length header was expected but not found..
+        /// </summary>
+        internal static string ContentLengthHeaderNotFound {
+            get {
+                return ResourceManager.GetString("ContentLengthHeaderNotFound", resourceCulture);
             }
         }
         
@@ -174,6 +201,15 @@ namespace Knapcode.MiniZip {
         internal static string StreamMustSupportSeek {
             get {
                 return ResourceManager.GetString("StreamMustSupportSeek", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The HTTP response did not have a success status code while trying to determine the content length..
+        /// </summary>
+        internal static string UnsuccessfulHttpStatusCodeWhenGettingLength {
+            get {
+                return ResourceManager.GetString("UnsuccessfulHttpStatusCodeWhenGettingLength", resourceCulture);
             }
         }
         

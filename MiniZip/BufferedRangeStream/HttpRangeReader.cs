@@ -8,7 +8,6 @@ namespace Knapcode.MiniZip
 {
     public class HttpRangeReader : IRangeReader
     {
-        private const string BytesUnit = "bytes";
 
         private readonly HttpClient _httpClient;
         private readonly Uri _requestUri;
@@ -38,7 +37,7 @@ namespace Knapcode.MiniZip
                     }
 
                     if (!response.Content.Headers.ContentRange.HasRange
-                        || response.Content.Headers.ContentRange.Unit != BytesUnit
+                        || response.Content.Headers.ContentRange.Unit != HttpConstants.BytesUnit
                         || response.Content.Headers.ContentRange.From != srcOffset
                         || response.Content.Headers.ContentRange.To != (srcOffset + count) - 1)
                     {

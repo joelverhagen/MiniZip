@@ -55,7 +55,7 @@ namespace Knapcode.MiniZip
                 // Assert
                 VerifyOutputBuffer(73, 5);
                 VerifyReads(73, 7);
-                await VerifyInternalBufferAsync(73, 17);
+                await VerifyInternalBufferAsync(73, 27);
             }
 
             [Fact]
@@ -72,7 +72,7 @@ namespace Knapcode.MiniZip
                 // Assert
                 VerifyOutputBuffer(70, 5);
                 VerifyReads(70, 10);
-                await VerifyInternalBufferAsync(70, 20);
+                await VerifyInternalBufferAsync(70, 30);
             }
 
             [Fact]
@@ -89,7 +89,7 @@ namespace Knapcode.MiniZip
                 // Assert
                 VerifyOutputBuffer(65, 5);
                 VerifyReads(65, 15);
-                await VerifyInternalBufferAsync(65, 25);
+                await VerifyInternalBufferAsync(65, 35);
             }
 
             [Fact]
@@ -138,7 +138,7 @@ namespace Knapcode.MiniZip
                 // Assert
                 VerifyUntouchedOutputBuffer();
                 VerifyNoReads();
-                Assert.Equal(-1, _target.BufferPosition);
+                Assert.Equal(_length, _target.BufferPosition);
                 Assert.Equal(0, _target.BufferSize);
             }
 
@@ -150,8 +150,8 @@ namespace Knapcode.MiniZip
 
                 // Assert
                 VerifyOutputBuffer(80, 5);
-                VerifyReads(80, 10);
-                await VerifyInternalBufferAsync(80, 10);
+                VerifyReads(80, 20);
+                await VerifyInternalBufferAsync(80, 20);
             }
 
             [Fact]
@@ -161,33 +161,33 @@ namespace Knapcode.MiniZip
                 _bufferSizeProvider
                     .Setup(x => x.GetNextBufferSize())
                     .Returns(5);
+                _target.Position = 95;
 
                 // Act
                 _read = await _target.ReadAsync(_outputBuffer, 0, 10);
 
                 // Assert
-                VerifyOutputBuffer(80, 10);
-                VerifyReads(80, 10);
-                await VerifyInternalBufferAsync(80, 10);
+                VerifyOutputBuffer(95, 5);
+                VerifyReads(90, 10);
+                await VerifyInternalBufferAsync(90, 10);
             }
 
-            [Theory]
-            [InlineData(-2)]
-            [InlineData(0)]
-            [InlineData(2)]
-            public async Task DoesNotAllowReadingAfterTheBuffer(int delta)
+            [Fact]
+            public async Task ReadsUpToTheEndOnFirstRead()
             {
                 // Arrange
-                await _target.ReadAsync(_extraBuffer, 0, 5);
-                _target.Position = 90 + delta;
-                _rangeReader.ResetCalls();
+                _bufferSizeProvider
+                    .Setup(x => x.GetNextBufferSize())
+                    .Returns(5);
+                _target.Position = 5;
 
-                // Act & Assert
-                var exception = await Assert.ThrowsAsync<NotSupportedException>(
-                    () => _target.ReadAsync(_outputBuffer, 0, 5));
-                VerifyUntouchedOutputBuffer();
-                VerifyNoReads();
-                await VerifyInternalBufferAsync(80, 10);
+                // Act
+                _read = await _target.ReadAsync(_outputBuffer, 0, 10);
+
+                // Assert
+                VerifyOutputBuffer(5, 10);
+                VerifyReads(5, 95);
+                await VerifyInternalBufferAsync(5, 95);
             }
 
             [Theory]
@@ -210,7 +210,7 @@ namespace Knapcode.MiniZip
                 // Assert
                 VerifyOutputBuffer(85 + delta, 5);
                 VerifyNoReads();
-                await VerifyInternalBufferAsync(80, 10);
+                await VerifyInternalBufferAsync(80, 20);
             }
 
             private void VerifyUntouchedOutputBuffer()

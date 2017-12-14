@@ -11,7 +11,7 @@ namespace Knapcode.MiniZip
     /// https://github.com/icsharpcode/SharpZipLib/blob/4ad264b562579fc8d0c1f73812f69b78b49ebdee/src/ICSharpCode.SharpZipLib/Zip/ZipFile.cs
     /// https://github.com/icsharpcode/SharpZipLib/blob/4ad264b562579fc8d0c1f73812f69b78b49ebdee/src/ICSharpCode.SharpZipLib/Zip/ZipHelperStream.cs
     /// </summary>
-    public class ZipDirectoryReader : IDisposable
+    public class ZipDirectoryReader : IZipDirectoryReader
     {
         private Stream _stream;
         private readonly byte[] _byteBuffer;

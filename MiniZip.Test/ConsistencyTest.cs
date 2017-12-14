@@ -31,7 +31,7 @@ namespace Knapcode.MiniZip
                 }
 
                 var httpRangeReader = new HttpRangeReader(client, requestUri);
-                var bufferSizeProvider = new ZipBufferSizeProvider(secondBufferSize: 1, exponent: 2);
+                var bufferSizeProvider = new ZipBufferSizeProvider(firstBufferSize: 1, secondBufferSize: 1, exponent: 2);
                 using (var bufferedRangeStream = new BufferedRangeStream(httpRangeReader, length, bufferSizeProvider))
                 {
                     // Act
@@ -57,7 +57,7 @@ namespace Knapcode.MiniZip
                 var fullPath = Path.Combine(TestUtility.TestDataDirectory, path);
                 var length = new FileInfo(fullPath).Length;
                 var fileRangeReader = new FileRangeReader(fullPath);
-                var bufferSizeProvider = new ZipBufferSizeProvider(secondBufferSize: 1, exponent: 2);
+                var bufferSizeProvider = new ZipBufferSizeProvider(firstBufferSize: 1, secondBufferSize: 1, exponent: 2);
                 using (var bufferedRangeStream = new BufferedRangeStream(fileRangeReader, length, bufferSizeProvider))
                 {
                     // Act

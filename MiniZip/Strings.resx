@@ -117,11 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AcceptRangesBytesValueNotFoundFormat" xml:space="preserve">
+    <value>The Accept-Ranges header must contain the "{0}" value.</value>
+    <comment>{0} is the expected value.</comment>
+  </data>
+  <data name="AcceptRangesHeaderNotFound" xml:space="preserve">
+    <value>The Accept-Ranges header was expected but not found.</value>
+  </data>
   <data name="CannotFindCentralDirectory" xml:space="preserve">
     <value>Cannot find central directory.</value>
   </data>
   <data name="CannotFindZip64Locator" xml:space="preserve">
     <value>Cannot find Zip64 locator.</value>
+  </data>
+  <data name="ContentLengthHeaderNotFound" xml:space="preserve">
+    <value>The Content-Length header was expected but not found.</value>
   </data>
   <data name="ContentRangeHeaderNotFound" xml:space="preserve">
     <value>The Content-Range header was expected but not found.</value>
@@ -155,6 +165,9 @@
   </data>
   <data name="StreamMustSupportSeek" xml:space="preserve">
     <value>The stream must support seeking.</value>
+  </data>
+  <data name="UnsuccessfulHttpStatusCodeWhenGettingLength" xml:space="preserve">
+    <value>The HTTP response did not have a success status code while trying to determine the content length.</value>
   </data>
   <data name="UTF8Mismatch" xml:space="preserve">
     <value>The UTF-8 flag is set on the ZIP entry but the encoding provided was not UTF-8.</value>
