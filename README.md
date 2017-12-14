@@ -25,6 +25,7 @@ For more information about the package, see the
 ## Example
 
 Take a look at the following sample code to get an idea of how this thing is used:
+
 https://github.com/joelverhagen/MiniZip/blob/master/MiniZip.Sandbox/Program.cs
 
 Here's a smaller example if you're into that.
@@ -62,3 +63,83 @@ ZIP file, not the contained files.
 
 In the future, perhaps I'll provide a wait to tease a single file out of the archive without downloading the whole
 thing...
+
+### Sample Output
+
+The truncated output of the longer sample code looks something like this:
+
+```
+========================================
+
+==> HEAD https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg
+
+<== 200 OK
+    Accept-Ranges: bytes
+    Content-Length: 2066865
+
+==> GET https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg
+    Range: bytes=2066843-2066864
+
+<== 206 Partial Content
+    Accept-Ranges: bytes
+    Content-Length: 22
+    Content-Range: bytes 2066843-2066864/2066865
+
+==> GET https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg
+    Range: bytes=2062769-2066842
+
+<== 206 Partial Content
+    Accept-Ranges: bytes
+    Content-Length: 4074
+    Content-Range: bytes 2062769-2066842/2066865
+
+Top 5 ZIP entries by compressed size:
+1. lib/net45/Newtonsoft.Json.dll (243,283 bytes)
+2. lib/netstandard1.3/Newtonsoft.Json.dll (238,412 bytes)
+3. lib/netstandard1.0/Newtonsoft.Json.dll (232,317 bytes)
+4. lib/portable-net45%2Bwin8%2Bwp8%2Bwpa81/Newtonsoft.Json.dll (232,022 bytes)
+5. lib/net40/Newtonsoft.Json.dll (201,901 bytes)
+
+========================================
+
+...
+
+========================================
+
+==> HEAD https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
+
+<== 200 OK
+    Accept-Ranges: bytes
+    Content-Length: 1252048
+
+==> GET https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
+    Range: bytes=1252026-1252047
+
+<== 206 Partial Content
+    Accept-Ranges: bytes
+    Content-Length: 22
+    Content-Range: bytes 1252026-1252047/1252048
+
+==> GET https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg
+    Range: bytes=1247952-1252025
+
+<== 206 Partial Content
+    Accept-Ranges: bytes
+    Content-Length: 4074
+    Content-Range: bytes 1247952-1252025/1252048
+
+Top 5 ZIP entries by compressed size:
+1. lib/Net40/HtmlAgilityPack.pdb (71,172 bytes)
+2. lib/Net45/HtmlAgilityPack.pdb (71,148 bytes)
+3. lib/Net40-client/HtmlAgilityPack.pdb (71,131 bytes)
+4. lib/Net20/HtmlAgilityPack.pdb (69,250 bytes)
+5. lib/uap10.0/HtmlAgilityPack.pdb (67,398 bytes)
+
+========================================
+
+Total ZIP files checked:    5
+Total HTTP requests:        15
+Total Content-Length bytes: 10,138,058
+Actual downloaded bytes:    20,480
+Downloaded %:               0.202%
+```
