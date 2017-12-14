@@ -11,6 +11,7 @@ namespace Knapcode.MiniZip
 
         private static async Task MainAsync()
         {
+            await Task.Yield();
         }
     }
 }
