@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +16,7 @@ namespace Knapcode.MiniZip
 
         private static async Task MainAsync()
         {
+            // Use the top 5 NuGet packages as an example.
             var urls = new[]
             {
                 "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/10.0.3/newtonsoft.json.10.0.3.nupkg",
@@ -26,10 +26,13 @@ namespace Knapcode.MiniZip
                 "https://api.nuget.org/v3-flatcontainer/htmlagilitypack/1.6.7/htmlagilitypack.1.6.7.nupkg",
             };
 
+            // Set up and HTTP client that logs HTTP requests, to help clarify this example.
             using (var httpClientHandler = new HttpClientHandler())
             using (var loggingHandler = new LoggingHandler { InnerHandler = httpClientHandler })
             using (var httpClient = new HttpClient(loggingHandler))
             {
+                // This provider uses and HTTP client and initializes a ZipDirectoryReader from a URL. This URL
+                // must support HEAD method, Content-Length response header, and Range request header.
                 var httpZipProvider = new HttpZipProvider(httpClient);
 
                 foreach (var url in urls)
@@ -37,10 +40,15 @@ namespace Knapcode.MiniZip
                     Console.WriteLine(new string('=', 40));
                     Console.WriteLine();
 
+                    // Initialize the reader. This performs a HEAD request to determine if the length of the
+                    // ZIP file and whether the URL supports Range requests.
                     using (var reader = await httpZipProvider.GetReaderAsync(new Uri(url)))
                     {
+                        // Read the ZIP file by requesting just the Central Directory part of the .zip.
                         var zipDirectory = await reader.ReadAsync();
 
+                        // At this point, we known all about the entries of the .zip file include name, compressed
+                        // size, and relative offset in the .zip file.
                         Console.WriteLine("Top 5 ZIP entries by compressed size:");
                         var entries = zipDirectory
                             .Entries
@@ -59,6 +67,8 @@ namespace Knapcode.MiniZip
                 Console.WriteLine(new string('=', 40));
                 Console.WriteLine();
 
+                // Summarize the work done. For NuGet packages, it is very common to download less than 1% of the
+                // package content while determining the .zip entry metadata.
                 var ratio = ((double)loggingHandler.TotalResponseBodyBytes) / loggingHandler.TotalContentLength;
                 Console.WriteLine($"Total ZIP files checked:    {urls.Length:N0}");
                 Console.WriteLine($"Total HTTP requests:        {loggingHandler.TotalRequests:N0}");
