@@ -6,18 +6,33 @@ using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
 {
+    /// <summary>
+    /// A range reader which reads bytes from a specific URL. The URL must support range requests.
+    /// </summary>
     public class HttpRangeReader : IRangeReader
     {
-
         private readonly HttpClient _httpClient;
         private readonly Uri _requestUri;
 
+        /// <summary>
+        /// Initializes the HTTP range reader. The provided <see cref="HttpClient"/> is not disposed by this instance.
+        /// </summary>
+        /// <param name="httpClient">The HTTP client used to make the HTTP requests.</param>
+        /// <param name="requestUri">The URL to request bytes from.</param>
         public HttpRangeReader(HttpClient httpClient, Uri requestUri)
         {
             _httpClient = httpClient;
             _requestUri = requestUri;
         }
 
+        /// <summary>
+        /// Read bytes from the request URL.
+        /// </summary>
+        /// <param name="srcOffset">The position from the beginning of the request URL's response body to start reading.</param>
+        /// <param name="dst">The destination buffer to write bytes to.</param>
+        /// <param name="dstOffset">The offset in the destination buffer.</param>
+        /// <param name="count">The maximum number of bytes to read.</param>
+        /// <returns>The number of bytes read.</returns>
         public async Task<int> ReadAsync(long srcOffset, byte[] dst, int dstOffset, int count)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Get, _requestUri))

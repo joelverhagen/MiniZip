@@ -19,6 +19,12 @@ namespace Knapcode.MiniZip
         private readonly IBufferSizeProvider _bufferSizeProvider;
         private long _position;
 
+        /// <summary>
+        /// Initializes an instance of a buffered range reader.
+        /// </summary>
+        /// <param name="rangeReader">The interface used for reading ranges of bytes.</param>
+        /// <param name="length">The total length of the file reader by <paramref name="rangeReader"/>.</param>
+        /// <param name="bufferSizeProvider">The interface used to determine what buffer sizes to use.</param>
         public BufferedRangeStream(IRangeReader rangeReader, long length, IBufferSizeProvider bufferSizeProvider)
         {
             _rangeReader = rangeReader;
@@ -28,14 +34,41 @@ namespace Knapcode.MiniZip
             _position = 0;
         }
 
+        /// <summary>
+        /// Whether or not this stream supports reading. It does.
+        /// </summary>
         public override bool CanRead => true;
+
+        /// <summary>
+        /// Whether or not this stream supports seeking. It does.
+        /// </summary>
         public override bool CanSeek => true;
+
+        /// <summary>
+        /// Whether or not this stream supports write. It does not.
+        /// </summary>
         public override bool CanWrite => false;
+
+        /// <summary>
+        /// The total length of this stream.
+        /// </summary>
         public override long Length { get; }
 
+        /// <summary>
+        /// The current position in the underlying of the buffer. The initial value of this property is
+        /// <see cref="Length"/>.
+        /// </summary>
         public long BufferPosition { get; private set; }
+
+        /// <summary>
+        /// The size of the buffer.
+        /// </summary>
         public int BufferSize { get; private set; }
 
+        /// <summary>
+        /// The current position of this buffering stream. The next <see cref="Read(byte[], int, int)"/> will attempt
+        /// to consume bytes here.
+        /// </summary>
         public override long Position
         {
             get
@@ -53,11 +86,22 @@ namespace Knapcode.MiniZip
             }
         }
 
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
         public override void Flush()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Asynchronously reads bytes from the stream into the provided buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to read bytes into.</param>
+        /// <param name="offset">The offset in the buffer which is where bytes will be written to.</param>
+        /// <param name="count">The maximum number of bytes to read.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The number of bytes read into the buffer.</returns>
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             var bufferOffset = await GetBufferOffsetAsync(count);
@@ -74,6 +118,13 @@ namespace Knapcode.MiniZip
             return read;
         }
 
+        /// <summary>
+        /// This method is not currently supported.
+        /// </summary>
+        /// <param name="buffer">The buffer to read bytes into.</param>
+        /// <param name="offset">The offset in the buffer which is where bytes will be written to.</param>
+        /// <param name="count">The maximum number of bytes to read.</param>
+        /// <returns>The number of bytes read into the buffer.</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
@@ -138,6 +189,12 @@ namespace Knapcode.MiniZip
             return (int)(Position - BufferPosition);
         }
 
+        /// <summary>
+        /// Seek to an offset in the stream, based off of the provided origin.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <param name="origin">The origin.</param>
+        /// <returns>The resulting absolute position (relative to the beginning).</returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
@@ -158,11 +215,21 @@ namespace Knapcode.MiniZip
             return Position;
         }
 
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
+        /// <param name="value">The new length for the stream.</param>
         public override void SetLength(long value)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// This method is not supported.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <param name="offset">The offset in the buffer to start reading from.</param>
+        /// <param name="count">The number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotImplementedException();

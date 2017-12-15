@@ -4,25 +4,49 @@ using System.Text;
 
 namespace Knapcode.MiniZip
 {
+    /// <summary>
+    /// Extension methods for <see cref="ZipEntry"/>.
+    /// </summary>
     public static class ZipEntryExtensions
     {
         private static readonly DateTime InvalidDateTime = new DateTime(1980, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
+        /// <summary>
+        /// Determine the compressed size of the <see cref="ZipEntry"/>, in bytes. This method takes all relevant
+        /// details in the entry into account.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
         public static ulong GetCompressedSize(this ZipEntry entry)
         {
             return entry.Zip64DataFields.SingleOrDefault()?.CompressedSize ?? entry.CompressedSize;
         }
 
+        /// <summary>
+        /// Determine the uncompressed size of the <see cref="ZipEntry"/>, in bytes. This method takes all relevant
+        /// details in the entry into account.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
         public static ulong GetUncompressedSize(this ZipEntry entry)
         {
             return entry.Zip64DataFields.SingleOrDefault()?.UncompressedSize ?? entry.UncompressedSize;
         }
 
+        /// <summary>
+        /// Determines the full path name of the <see cref="ZipEntry"/> by decoding the name bytes. Uses UTF-8
+        /// encoding if the <see cref="ZipEntry.Flags"/> indicate as such, otherwise uses the default code page.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
         public static string GetName(this ZipEntry entry)
         {
             return entry.GetName(encoding: null);
         }
 
+        /// <summary>
+        /// Determines the full path name of the <see cref="ZipEntry"/> by decoding the name bytes with the provided
+        /// encoding.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
+        /// <param name="encoding">The encoding to decode the bytes with.</param>
         public static string GetName(this ZipEntry entry, Encoding encoding)
         {
             if (encoding == null)
@@ -37,6 +61,11 @@ namespace Knapcode.MiniZip
             return encoding.GetString(entry.Name);
         }
 
+        /// <summary>
+        /// Determine the last modified time of the <see cref="ZipEntry"/>. The encoded format of the last modified time
+        /// is MS-DOS format. There is no timezone information associated with the output.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
         public static DateTime GetLastModified(this ZipEntry entry)
         {
             var year   = 1980 + ((entry.LastModifiedDate & 0b1111_1110_0000_0000) >> 9 );

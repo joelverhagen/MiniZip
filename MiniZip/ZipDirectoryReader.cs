@@ -7,10 +7,14 @@ using System.Threading.Tasks;
 namespace Knapcode.MiniZip
 {
     /// <summary>
+    /// Reads a stream containing a ZIP archive file. The stream operated on must support reading, seeking, and must
+    /// have a known length.
+    /// </summary>
+    /// <remarks>
     /// Based off of:
     /// https://github.com/icsharpcode/SharpZipLib/blob/4ad264b562579fc8d0c1f73812f69b78b49ebdee/src/ICSharpCode.SharpZipLib/Zip/ZipFile.cs
     /// https://github.com/icsharpcode/SharpZipLib/blob/4ad264b562579fc8d0c1f73812f69b78b49ebdee/src/ICSharpCode.SharpZipLib/Zip/ZipHelperStream.cs
-    /// </summary>
+    /// </remarks>
     public class ZipDirectoryReader : IZipDirectoryReader
     {
         private Stream _stream;
@@ -18,10 +22,21 @@ namespace Knapcode.MiniZip
         private readonly bool _leaveOpen;
         private int _disposed;
 
+        /// <summary>
+        /// Initializes a ZIP directory reader, which reads the provided <see cref="Stream"/>. When this instance is
+        /// disposed, the provided stream is also disposed.
+        /// </summary>
+        /// <param name="stream">The stream containing the ZIP archive.</param>
         public ZipDirectoryReader(Stream stream) : this(stream, leaveOpen: false)
         {
         }
 
+        /// <summary>
+        /// Initializes a ZIP directory reader, which reads the provided <see cref="Stream"/>. Whether or not the
+        /// provided stream is disposed when this instance is disposed is controlled by <paramref name="leaveOpen"/>.
+        /// </summary>
+        /// <param name="stream">The stream containing the ZIP archive.</param>
+        /// <param name="leaveOpen">Whether or not to leave the stream open when this instance is disposed.</param>
         public ZipDirectoryReader(Stream stream, bool leaveOpen)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
@@ -40,6 +55,9 @@ namespace Knapcode.MiniZip
             }
         }
 
+        /// <summary>
+        /// Dispose this instance.
+        /// </summary>
         public void Dispose()
         {
             var disposed = Interlocked.CompareExchange(ref _disposed, 1, 0);
@@ -54,8 +72,17 @@ namespace Knapcode.MiniZip
             }
         }
 
+        /// <summary>
+        /// Whether or not this instance is disposed.
+        /// </summary>
         public bool IsDisposed => _disposed != 0;
 
+        /// <summary>
+        /// Read the stream and gather all of the ZIP directory metadata. This extracts ZIP entry information and
+        /// relative offsets. This method does not read the file entry contents or decompress anything. This method
+        /// also does not decrypt anything.
+        /// </summary>
+        /// <returns>The ZIP directory metadata.</returns>
         public async Task<ZipDirectory> ReadAsync()
         {
             if (IsDisposed)
