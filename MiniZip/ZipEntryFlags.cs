@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// Known values for the <see cref="ZipEntry.Flags"/>.
-    /// APPNOTE.TXT: 4.4.4 general purpose bit flag: (2 bytes)
+    /// APPNOTE.TXT: 4.4.4 general purpose bit flag
     /// </summary>
     public enum ZipEntryFlags : ushort
     {
