@@ -63,7 +63,8 @@ namespace Knapcode.MiniZip
 
         /// <summary>
         /// Determine the last modified time of the <see cref="ZipEntry"/>. The encoded format of the last modified time
-        /// is MS-DOS format. There is no timezone information associated with the output.
+        /// is MS-DOS format. There is no timezone information associated with the output. Defaults to 1980-01-01 if the
+        /// last modified time is invalid.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
         public static DateTime GetLastModified(this ZipEntry entry)
