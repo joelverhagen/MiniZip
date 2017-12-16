@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +18,17 @@ namespace Knapcode.MiniZip
     /// </remarks>
     public class ZipDirectoryReader : IZipDirectoryReader
     {
+        private static readonly int BufferSize = new[]
+        {
+            ZipConstants.EndOfCentralDirectorySizeWithoutSignature,
+            ZipConstants.Zip64EndOfCentralDirectoryLocatorSizeWithoutSignature,
+            ZipConstants.Zip64EndOfCentralDirectorySizeWithoutSignature,
+            ZipConstants.CentralDirectoryEntryHeaderSizeWithoutSignature,
+            sizeof(uint),
+        }.Max();
+
         private Stream _stream;
-        private readonly byte[] _byteBuffer;
+        private readonly byte[] _buffer;
         private readonly bool _leaveOpen;
         private int _disposed;
 
@@ -40,7 +50,7 @@ namespace Knapcode.MiniZip
         public ZipDirectoryReader(Stream stream, bool leaveOpen)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-            _byteBuffer = new byte[1];
+            _buffer = new byte[BufferSize];
             _leaveOpen = leaveOpen;
             _disposed = 0;
 
@@ -69,6 +79,7 @@ namespace Knapcode.MiniZip
                 }
 
                 _stream = null;
+
             }
         }
 
@@ -95,7 +106,7 @@ namespace Knapcode.MiniZip
             zip.OffsetAfterEndOfCentralDirectory = await LocateBlockWithSignatureAsync(
                 ZipConstants.EndOfCentralDirectorySignature,
                 _stream.Length,
-                ZipConstants.EndOfCentralRecordBaseSize,
+                ZipConstants.EndOfCentralDirectorySize,
                 0xffff);
 
             if (zip.OffsetAfterEndOfCentralDirectory < 0)
@@ -103,13 +114,17 @@ namespace Knapcode.MiniZip
                 throw new MiniZipException(Strings.CannotFindCentralDirectory);
             }
 
-            zip.NumberOfThisDisk = await ReadLEU16Async();
-            zip.DiskWithStartOfCentralDirectory = await ReadLEU16Async();
-            zip.EntriesInThisDisk = await ReadLEU16Async();
-            zip.EntriesForWholeCentralDirectory = await ReadLEU16Async();
-            zip.CentralDirectorySize = await ReadLEU32Async();
-            zip.OffsetOfCentralDirectory = await ReadLEU32Async();
-            zip.CommentSize = await ReadLEU16Async();
+            using (var reader = await LoadBinaryReaderAsync(_buffer, ZipConstants.EndOfCentralDirectorySizeWithoutSignature))
+            {
+                zip.NumberOfThisDisk = reader.ReadUInt16();
+                zip.DiskWithStartOfCentralDirectory = reader.ReadUInt16();
+                zip.EntriesInThisDisk = reader.ReadUInt16();
+                zip.EntriesForWholeCentralDirectory = reader.ReadUInt16();
+                zip.CentralDirectorySize = reader.ReadUInt32();
+                zip.OffsetOfCentralDirectory = reader.ReadUInt32();
+                zip.CommentSize = reader.ReadUInt16();
+            }
+            
             zip.Comment = new byte[zip.CommentSize];
             await ReadFullyAsync(zip.Comment);
 
@@ -136,26 +151,32 @@ namespace Knapcode.MiniZip
                     throw new MiniZipException(Strings.CannotFindZip64Locator);
                 }
 
-                zip.Zip64.DiskWithStartOfEndOfCentralDirectory = await ReadLEU32Async();
-                zip.Zip64.EndOfCentralDirectoryOffset = await ReadLEU64Async();
-                zip.Zip64.TotalNumberOfDisks = await ReadLEU32Async();
+                using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.Zip64EndOfCentralDirectoryLocatorSizeWithoutSignature))
+                {
+                    zip.Zip64.DiskWithStartOfEndOfCentralDirectory = buffer.ReadUInt32();
+                    zip.Zip64.EndOfCentralDirectoryOffset = buffer.ReadUInt64();
+                    zip.Zip64.TotalNumberOfDisks = buffer.ReadUInt32();
+                }
 
                 _stream.Position = (long)zip.Zip64.EndOfCentralDirectoryOffset;
 
-                if (await ReadLEU32Async() != ZipConstants.Zip64CentralFileHeaderSignature)
+                if (await ReadUInt32Async() != ZipConstants.Zip64EndOfCentralDirectorySignature)
                 {
                     throw new MiniZipException(Strings.InvalidZip64CentralDirectorySignature);
                 }
 
-                zip.Zip64.SizeOfCentralDirectoryRecord = await ReadLEU64Async();
-                zip.Zip64.VersionMadeBy = await ReadLEU16Async(); 
-                zip.Zip64.VersionToExtract = await ReadLEU16Async();
-                zip.Zip64.NumberOfThisDisk = await ReadLEU32Async();
-                zip.Zip64.DiskWithStartOfCentralDirectory =  await ReadLEU32Async();
-                zip.Zip64.EntriesInThisDisk = await ReadLEU64Async();
-                zip.Zip64.EntriesForWholeCentralDirectory = await ReadLEU64Async();
-                zip.Zip64.CentralDirectorySize = await ReadLEU64Async();
-                zip.Zip64.OffsetOfCentralDirectory = await ReadLEU64Async();
+                using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.Zip64EndOfCentralDirectorySizeWithoutSignature))
+                {
+                    zip.Zip64.SizeOfCentralDirectoryRecord = buffer.ReadUInt64();
+                    zip.Zip64.VersionMadeBy = buffer.ReadUInt16();
+                    zip.Zip64.VersionToExtract = buffer.ReadUInt16();
+                    zip.Zip64.NumberOfThisDisk = buffer.ReadUInt32();
+                    zip.Zip64.DiskWithStartOfCentralDirectory = buffer.ReadUInt32();
+                    zip.Zip64.EntriesInThisDisk = buffer.ReadUInt64();
+                    zip.Zip64.EntriesForWholeCentralDirectory = buffer.ReadUInt64();
+                    zip.Zip64.CentralDirectorySize = buffer.ReadUInt64();
+                    zip.Zip64.OffsetOfCentralDirectory = buffer.ReadUInt64();
+                }
 
                 offsetOfCentralDirectory = (long)zip.Zip64.OffsetOfCentralDirectory;
                 entriesInThisDisk = zip.Zip64.EntriesInThisDisk;
@@ -189,29 +210,32 @@ namespace Knapcode.MiniZip
 
         private async Task<ZipEntry> ReadEntryAsync()
         {
-            if (await ReadLEU32Async() != ZipConstants.CentralHeaderSignature)
+            if (await ReadUInt32Async() != ZipConstants.CentralDirectoryEntryHeaderSignature)
             {
                 throw new MiniZipException(Strings.InvalidCentralDirectorySignature);
             }
 
             var entry = new ZipEntry();
 
-            entry.VersionMadeBy = await ReadLEU16Async();
-            entry.VersionToExtract = await ReadLEU16Async();
-            entry.Flags = await ReadLEU16Async();
-            entry.CompressionMethod = await ReadLEU16Async();
-            entry.LastModifiedTime = await ReadLEU16Async();
-            entry.LastModifiedDate = await ReadLEU16Async();
-            entry.Crc32 = await ReadLEU32Async();
-            entry.CompressedSize = await ReadLEU32Async();
-            entry.UncompressedSize = await ReadLEU32Async();
-            entry.NameSize = await ReadLEU16Async();
-            entry.ExtraFieldSize = await ReadLEU16Async();
-            entry.CommentSize = await ReadLEU16Async();
-            entry.DiskNumberStart = await ReadLEU16Async();
-            entry.InternalAttributes = await ReadLEU16Async();
-            entry.ExternalAttributes = await ReadLEU32Async();
-            entry.LocalHeaderOffset = await ReadLEU32Async();
+            using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.CentralDirectoryEntryHeaderSizeWithoutSignature))
+            {
+                entry.VersionMadeBy = buffer.ReadUInt16();
+                entry.VersionToExtract = buffer.ReadUInt16();
+                entry.Flags = buffer.ReadUInt16();
+                entry.CompressionMethod = buffer.ReadUInt16();
+                entry.LastModifiedTime = buffer.ReadUInt16();
+                entry.LastModifiedDate = buffer.ReadUInt16();
+                entry.Crc32 = buffer.ReadUInt32();
+                entry.CompressedSize = buffer.ReadUInt32();
+                entry.UncompressedSize = buffer.ReadUInt32();
+                entry.NameSize = buffer.ReadUInt16();
+                entry.ExtraFieldSize = buffer.ReadUInt16();
+                entry.CommentSize = buffer.ReadUInt16();
+                entry.DiskNumberStart = buffer.ReadUInt16();
+                entry.InternalAttributes = buffer.ReadUInt16();
+                entry.ExternalAttributes = buffer.ReadUInt32();
+                entry.LocalHeaderOffset = buffer.ReadUInt32();
+            }
 
             entry.Name = new byte[entry.NameSize];
             await ReadFullyAsync(entry.Name);
@@ -219,8 +243,8 @@ namespace Knapcode.MiniZip
             entry.ExtraField = new byte[entry.ExtraFieldSize];
             await ReadFullyAsync(entry.ExtraField);
 
-            entry.DataFields = await ReadDataFieldsAsync(entry.ExtraField);
-            entry.Zip64DataFields = await ReadZip64DataFields(entry);
+            entry.DataFields = ReadDataFields(entry.ExtraField);
+            entry.Zip64DataFields = ReadZip64DataFields(entry);
 
             entry.Comment = new byte[entry.CommentSize];
             await ReadFullyAsync(entry.Comment);
@@ -228,20 +252,23 @@ namespace Knapcode.MiniZip
             return entry;
         }
 
-        private async Task<List<ZipDataField>> ReadDataFieldsAsync(byte[] extraField)
+        private List<ZipDataField> ReadDataFields(byte[] extraField)
         {
             var dataFields = new List<ZipDataField>();
-            using (var extraStream = new MemoryStream(extraField))
+            using (var reader = GetBinaryReader(extraField))
             {
-                while (extraStream.Position < extraStream.Length)
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
                 {
                     var dataField = new ZipDataField();
 
-                    dataField.HeaderId = await extraStream.ReadLEU16Async(_byteBuffer);
-                    dataField.DataSize = await extraStream.ReadLEU16Async(_byteBuffer);
+                    dataField.HeaderId = reader.ReadUInt16();
+                    dataField.DataSize = reader.ReadUInt16();
 
-                    dataField.Data = new byte[dataField.DataSize];
-                    await extraStream.ReadFullyAsync(dataField.Data);
+                    dataField.Data = reader.ReadBytes(dataField.DataSize);
+                    if (dataField.Data.Length < dataField.DataSize)
+                    {
+                        throw new EndOfStreamException();
+                    }
 
                     dataFields.Add(dataField);
                 }
@@ -250,7 +277,7 @@ namespace Knapcode.MiniZip
             return dataFields;
         }
 
-        private async Task<List<Zip64DataField>> ReadZip64DataFields(ZipEntry entry)
+        private List<Zip64DataField> ReadZip64DataFields(ZipEntry entry)
         {
             // Zip64 extended information extra field
             var zip64DataFields = new List<Zip64DataField>();
@@ -266,31 +293,31 @@ namespace Knapcode.MiniZip
                     throw new MiniZipException(Strings.InvalidZip64ExtendedInformationLength);
                 }
 
-                using (var stream = new MemoryStream(dataField.Data))
+                using (var reader = GetBinaryReader(dataField.Data))
                 {
                     var field = new Zip64DataField();
 
                     if (entry.UncompressedSize == 0xffffffff)
                     {
-                        field.UncompressedSize = await stream.ReadLEU64Async(_byteBuffer);
+                        field.UncompressedSize = reader.ReadUInt64();
                     }
 
                     if (entry.CompressedSize == 0xffffffff)
                     {
-                        field.CompressedSize = await stream.ReadLEU64Async(_byteBuffer);
+                        field.CompressedSize = reader.ReadUInt64();
                     }
 
                     if (entry.LocalHeaderOffset == 0xffffffff)
                     {
-                        field.LocalHeaderOffset = await stream.ReadLEU64Async(_byteBuffer);
+                        field.LocalHeaderOffset = reader.ReadUInt64();
                     }
 
                     if (entry.DiskNumberStart == 0xffff)
                     {
-                        field.DiskNumberStart = await stream.ReadLEU32Async(_byteBuffer);
+                        field.DiskNumberStart = reader.ReadUInt32();
                     }
 
-                    if (stream.Position < stream.Length)
+                    if (reader.BaseStream.Position < reader.BaseStream.Length)
                     {
                         throw new MiniZipException(Strings.NotAllZip64ExtendedInformationWasRead);
                     }
@@ -325,29 +352,60 @@ namespace Knapcode.MiniZip
 
                 _stream.Seek(pos--, SeekOrigin.Begin);
             }
-            while (await ReadLEU32Async() != signature);
+            while (await ReadUInt32Async() != signature);
 
             return _stream.Position;
         }
         
         private async Task ReadFullyAsync(byte[] buffer)
         {
-            await _stream.ReadFullyAsync(buffer);
+            await _stream.ReadExactlyAsync(buffer, buffer.Length);
         }
 
-        private async Task<ushort> ReadLEU16Async()
+        private async Task<BinaryReader> LoadBinaryReaderAsync(byte[] buffer, int count)
         {
-            return await _stream.ReadLEU16Async(_byteBuffer);
+            await _stream.ReadExactlyAsync(buffer, count);
+            return GetBinaryReader(buffer, count);
         }
 
-        private async Task<uint> ReadLEU32Async()
+        private static BinaryReader GetBinaryReader(byte[] buffer)
         {
-            return await _stream.ReadLEU32Async(_byteBuffer);
+            return GetBinaryReader(buffer, buffer.Length);
         }
 
-        private async Task<ulong> ReadLEU64Async()
+        private static BinaryReader GetBinaryReader(byte[] buffer, int length)
         {
-            return await _stream.ReadLEU64Async(_byteBuffer);
+            var stream = new MemoryStream(buffer);
+            stream.SetLength(length);
+            return new StrictBinaryReader(stream);
+        }
+
+        private async Task<uint> ReadUInt32Async()
+        {
+            using (var reader = await LoadBinaryReaderAsync(_buffer, sizeof(UInt32)))
+            {
+                return reader.ReadUInt32();
+            }
+        }
+
+        private class StrictBinaryReader : BinaryReader
+        {
+            public StrictBinaryReader(Stream input) : base(input)
+            {
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    if (BaseStream.Position < BaseStream.Length)
+                    {
+                        throw new InvalidOperationException(Strings.BufferNotConsumed);
+                    }
+                }
+
+                base.Dispose(disposing);
+            }
         }
     }
 }

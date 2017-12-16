@@ -172,4 +172,7 @@
   <data name="UTF8Mismatch" xml:space="preserve">
     <value>The UTF-8 flag is set on the ZIP entry but the encoding provided was not UTF-8.</value>
   </data>
+  <data name="BufferNotConsumed" xml:space="preserve">
+    <value>The buffer was not fully consumed.</value>
+  </data>
 </root>

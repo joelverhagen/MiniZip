@@ -79,6 +79,15 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The buffer was not fully consumed..
+        /// </summary>
+        internal static string BufferNotConsumed {
+            get {
+                return ResourceManager.GetString("BufferNotConsumed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find central directory..
         /// </summary>
         internal static string CannotFindCentralDirectory {

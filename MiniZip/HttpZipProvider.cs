@@ -25,7 +25,7 @@ namespace Knapcode.MiniZip
         /// The first buffer size in bytes to use when reading. This defaults to 22 bytes, which is the length of the
         /// "end of central directory" record.
         /// </summary>
-        public int FirstBufferSize { get; set; } = ZipConstants.EndOfCentralRecordBaseSize;
+        public int FirstBufferSize { get; set; } = ZipConstants.EndOfCentralDirectorySize;
 
         /// <summary>
         /// The second buffer size in bytes to use when reading. This defaults to 4096 bytes.
