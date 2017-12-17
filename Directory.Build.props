@@ -3,8 +3,8 @@
           Condition="exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')))" />
   <PropertyGroup>
   	<ArtifactsDirectory Condition="'$(ArtifactsDirectory)' == ''">$(SolutionDir)artifacts</ArtifactsDirectory>
-    <_ProjectArtifactsDirectory>$(ArtifactsDirectory)/$(SolutionName)/$(MSBuildProjectName)/</_ProjectArtifactsDirectory>
-    <BaseIntermediateOutputPath>$(_ProjectArtifactsDirectory)obj/</BaseIntermediateOutputPath>
+    <_ProjectArtifactsDirectory>$(ArtifactsDirectory)/$(SolutionName)/$(MSBuildProjectName)</_ProjectArtifactsDirectory>
+    <BaseIntermediateOutputPath>$(_ProjectArtifactsDirectory)/obj/</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)/</IntermediateOutputPath>
     <BaseOutputPath>$(_ProjectArtifactsDirectory)/bin/</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)$(Configuration)/</OutputPath>
