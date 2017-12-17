@@ -16,7 +16,7 @@ namespace Knapcode.MiniZip
                 _target.Prepend(_bufferE);
 
                 // Assert
-                Assert.Equal(_bufferE.Length, _bufferE.Length);
+                Assert.Equal(_bufferE.Length, _target.Length);
             }
         }
 
@@ -29,7 +29,7 @@ namespace Knapcode.MiniZip
                 _target.Append(_bufferE);
 
                 // Assert
-                Assert.Equal(_bufferE.Length, _bufferE.Length);
+                Assert.Equal(_bufferE.Length, _target.Length);
             }
         }
 
