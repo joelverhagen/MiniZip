@@ -2,6 +2,8 @@
 
 Read the file listing of a .zip archive without downloading the whole thing.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/d123gosp49t5sh05/branch/master?svg=true)](https://ci.appveyor.com/project/joelverhagen/minizip/branch/master)
+
 ## Introduction
 
 The idea is that ZIP files have their central directory data end the end of the file. This central directory is a
