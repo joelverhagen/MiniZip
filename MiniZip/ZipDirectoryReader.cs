@@ -359,12 +359,12 @@ namespace Knapcode.MiniZip
         
         private async Task ReadFullyAsync(byte[] buffer)
         {
-            await _stream.ReadExactlyAsync(buffer, buffer.Length);
+            await _stream.ReadExactlyAsync(buffer, 0, buffer.Length);
         }
 
         private async Task<BinaryReader> LoadBinaryReaderAsync(byte[] buffer, int count)
         {
-            await _stream.ReadExactlyAsync(buffer, count);
+            await _stream.ReadExactlyAsync(buffer, 0, count);
             return GetBinaryReader(buffer, count);
         }
 

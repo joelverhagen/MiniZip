@@ -14,9 +14,9 @@ namespace Knapcode.MiniZip
     /// </summary>
     public class BufferedRangeStream : Stream
     {
-        private byte[] _buffer;
         private readonly IRangeReader _rangeReader;
         private readonly IBufferSizeProvider _bufferSizeProvider;
+        private readonly BlockMemoryStream _buffer;
         private long _position;
 
         /// <summary>
@@ -29,6 +29,7 @@ namespace Knapcode.MiniZip
         {
             _rangeReader = rangeReader;
             _bufferSizeProvider = bufferSizeProvider;
+            _buffer = new BlockMemoryStream();
             Length = length;
             BufferPosition = length;
             _position = 0;
@@ -63,7 +64,7 @@ namespace Knapcode.MiniZip
         /// <summary>
         /// The size of the buffer.
         /// </summary>
-        public int BufferSize { get; private set; }
+        public long BufferSize => _buffer.Length;
 
         /// <summary>
         /// The current position of this buffering stream. The next <see cref="Read(byte[], int, int)"/> will attempt
@@ -110,8 +111,9 @@ namespace Knapcode.MiniZip
                 return 0;
             }
 
-            var read = Math.Min(_buffer.Length - bufferOffset, count);
-            Buffer.BlockCopy(_buffer, bufferOffset, buffer, offset, read);
+            var read = (int) Math.Min(_buffer.Length - bufferOffset, count);
+            _buffer.Position = bufferOffset;
+            _buffer.ReadExactly(buffer, offset, read);
 
             Position += read;
 
@@ -132,19 +134,13 @@ namespace Knapcode.MiniZip
 
         private async Task<int> GetBufferOffsetAsync(int count)
         {
-            if ((_buffer == null
-                 || Position < BufferPosition
-                 || Position + count > BufferPosition + _buffer.Length))
+            if (Position >= Length)
             {
-                if (Position >= Length)
-                {
-                    return -1;
-                }
+                return -1;
+            }
 
-                if (_buffer != null && Position + count > BufferPosition + _buffer.Length)
-                {
-                    throw new NotSupportedException();
-                }
+            if (Position < BufferPosition)
+            {
 
                 // Determine the read offset by setting a desired buffer size.
                 var desiredBufferSize = Math.Max(count, _bufferSizeProvider.GetNextBufferSize());
@@ -164,25 +160,12 @@ namespace Knapcode.MiniZip
                 {
                     readOffset = Position;
                 }
-
+                
                 // Read up until the old position (or up to the end, if this is the first read).
                 var readCount =  (int)(BufferPosition - readOffset);
-                var newBuffer = new byte[readCount + (_buffer?.Length ?? 0)];
+                var newBuffer = new byte[readCount];
                 var actualRead = await _rangeReader.ReadAsync(readOffset, newBuffer, 0, readCount);
-
-                if (_buffer == null)
-                {
-                    BufferSize = actualRead;
-                    _buffer = newBuffer;
-                }
-                else
-                {
-                    // Append the old buff
-                    Buffer.BlockCopy(_buffer, 0, newBuffer, actualRead, BufferSize);
-                    BufferSize += actualRead;
-                    _buffer = newBuffer;
-                }
-                
+                _buffer.Prepend(newBuffer);
                 BufferPosition = readOffset;
             }
 
@@ -197,22 +180,7 @@ namespace Knapcode.MiniZip
         /// <returns>The resulting absolute position (relative to the beginning).</returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    Position = offset;
-                    break;
-                case SeekOrigin.Current:
-                    Position += offset;
-                    break;
-                case SeekOrigin.End:
-                    Position = Length - offset;
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
-
-            return Position;
+            return this.SeekUsingPosition(offset, origin);
         }
 
         /// <summary>
@@ -221,7 +189,7 @@ namespace Knapcode.MiniZip
         /// <param name="value">The new length for the stream.</param>
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         /// <summary>
@@ -232,7 +200,7 @@ namespace Knapcode.MiniZip
         /// <param name="count">The number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

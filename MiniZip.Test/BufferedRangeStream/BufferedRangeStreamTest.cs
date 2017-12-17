@@ -42,6 +42,36 @@ namespace Knapcode.MiniZip
             }
 
             [Fact]
+            public async Task ReadsNothingIfPositionIsGreaterThanLength()
+            {
+                // Arrange
+                _target.Position = _length + 1;
+
+                // Act
+                _read = await _target.ReadAsync(_outputBuffer, 0, 5);
+
+                // Assert
+                VerifyUntouchedOutputBuffer();
+                VerifyNoReads();
+                await VerifyInternalBufferAsync(100, 0);
+            }
+
+            [Fact]
+            public async Task BuffersEverythingIfPositionIsZero()
+            {
+                // Arrange
+                _target.Position = 0;
+
+                // Act
+                _read = await _target.ReadAsync(_outputBuffer, 0, 5);
+
+                // Assert
+                VerifyOutputBuffer(0, 5);
+                VerifyReads(0, 100);
+                await VerifyInternalBufferAsync(0, 100);
+            }
+
+            [Fact]
             public async Task JoinsBuffersFromOverlappingReads()
             {
                 // Arrange
