@@ -3,9 +3,10 @@
           Condition="exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')))" />
   <PropertyGroup>
   	<ArtifactsDirectory Condition="'$(ArtifactsDirectory)' == ''">$(MSBuildThisFileDirectory)artifacts</ArtifactsDirectory>
+  	<SolutionName Condition="'$(SolutionName)' == ''">MiniZip</SolutionName>
     <_ProjectArtifactsDirectory>$(ArtifactsDirectory)/$(SolutionName)/$(MSBuildProjectName)</_ProjectArtifactsDirectory>
-    <BaseIntermediateOutputPath>$(_ProjectArtifactsDirectory)/obj/</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)/</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>$(_ProjectArtifactsDirectory)/obj</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)/$(Configuration)/</IntermediateOutputPath>
     <BaseOutputPath>$(_ProjectArtifactsDirectory)/bin/</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)$(Configuration)/</OutputPath>
   </PropertyGroup>
