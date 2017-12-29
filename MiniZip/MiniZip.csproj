@@ -1,23 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk" InitialTargets="SetVersion">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="build;pack">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.2.1</Version>
     <Authors>Joel Verhagen</Authors>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/joelverhagen/MiniZip/master/LICENSE</PackageLicenseUrl>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.0.8" />
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Strings.Designer.cs">
@@ -33,12 +26,5 @@
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="SetVersion" DependsOnTargets="GitVersion">
-    <PropertyGroup>
-      <PackageVersion Condition="'$(GitSemVerDashLabel)' == ''">$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</PackageVersion>
-      <PackageVersion Condition="'$(GitSemVerDashLabel)' != ''">$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(GitCommits)</PackageVersion>
-    </PropertyGroup>
-  </Target>
 
 </Project>
