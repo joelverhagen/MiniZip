@@ -23,6 +23,21 @@ namespace Knapcode.MiniZip
             .Select(x => GetRelativePath(x, TestDataDirectory))
             .ToList();
 
+        public static IReadOnlyList<string> InvalidTestDataPaths => new[]
+        {
+            @"SharpZipLib\ZipFileHandling.EmbeddedArchive\1.zip",
+            @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
+            @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
+            @"System.IO.Compression\badzipfiles\CDoffsetInBoundsWrong.zip",
+            @"System.IO.Compression\badzipfiles\CDoffsetOutOfBounds.zip",
+            @"System.IO.Compression\badzipfiles\EOCDmissing.zip",
+            @"System.IO.Compression\badzipfiles\numberOfEntriesDifferent.zip",
+        };
+
+        public static IReadOnlyList<string> ValidTestDataPaths => TestDataPaths
+            .Except(InvalidTestDataPaths)
+            .ToList();
+
         public static void VerifyJsonEquals<T>(T expected, T actual)
         {
             var expectedJson = JsonConvert.SerializeObject(expected, Formatting.Indented);

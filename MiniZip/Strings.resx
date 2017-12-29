@@ -175,4 +175,19 @@
   <data name="BufferNotConsumed" xml:space="preserve">
     <value>The buffer was not fully consumed.</value>
   </data>
+  <data name="EndPositionBeyondLength" xml:space="preserve">
+    <value>The end position must be less than the inner stream length.</value>
+  </data>
+  <data name="StartPositionGreaterThanEndPosition" xml:space="preserve">
+    <value>The start position must be less than or equal to the end position.</value>
+  </data>
+  <data name="StartPositionMustNotBeNegative" xml:space="preserve">
+    <value>The start position must be greater than or equal to zero.</value>
+  </data>
+  <data name="InnerStreamPositionBeforeBounds" xml:space="preserve">
+    <value>The inner stream is positioned before the position bounds.</value>
+  </data>
+  <data name="PositionBeforeVirtualOffset" xml:space="preserve">
+    <value>The position of the stream must not be before the virtual offset.</value>
+  </data>
 </root>

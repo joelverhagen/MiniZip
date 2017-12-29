@@ -80,7 +80,7 @@ namespace Knapcode.MiniZip
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException(Strings.PositionMustBeNonNegative, nameof(value));
+                    throw new ArgumentOutOfRangeException(nameof(value), Strings.PositionMustBeNonNegative);
                 }
 
                 _position = value;

@@ -124,11 +124,29 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The end position must be less than the inner stream length..
+        /// </summary>
+        internal static string EndPositionBeyondLength {
+            get {
+                return ResourceManager.GetString("EndPositionBeyondLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Zip64 metadata is not consistent with the non-Zip64 metadata..
         /// </summary>
         internal static string InconsistentZip64Metadata {
             get {
                 return ResourceManager.GetString("InconsistentZip64Metadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The inner stream is positioned before the position bounds..
+        /// </summary>
+        internal static string InnerStreamPositionBeforeBounds {
+            get {
+                return ResourceManager.GetString("InnerStreamPositionBeforeBounds", resourceCulture);
             }
         }
         
@@ -187,11 +205,38 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The position of the stream must not be before the virtual offset..
+        /// </summary>
+        internal static string PositionBeforeVirtualOffset {
+            get {
+                return ResourceManager.GetString("PositionBeforeVirtualOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position must be a non-negative number..
         /// </summary>
         internal static string PositionMustBeNonNegative {
             get {
                 return ResourceManager.GetString("PositionMustBeNonNegative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The start position must be less than or equal to the end position..
+        /// </summary>
+        internal static string StartPositionGreaterThanEndPosition {
+            get {
+                return ResourceManager.GetString("StartPositionGreaterThanEndPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The start position must be greater than or equal to zero..
+        /// </summary>
+        internal static string StartPositionMustNotBeNegative {
+            get {
+                return ResourceManager.GetString("StartPositionMustNotBeNegative", resourceCulture);
             }
         }
         
