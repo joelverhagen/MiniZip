@@ -36,7 +36,8 @@
 
   <Target Name="SetVersion" DependsOnTargets="GitVersion">
     <PropertyGroup>
-      <PackageVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel)</PackageVersion>
+      <PackageVersion Condition="'$(GitSemVerDashLabel)' == ''">$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</PackageVersion>
+      <PackageVersion Condition="'$(GitSemVerDashLabel)' != ''">$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(GitCommits)</PackageVersion>
     </PropertyGroup>
   </Target>
 
