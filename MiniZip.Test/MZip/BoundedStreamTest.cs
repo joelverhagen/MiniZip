@@ -29,7 +29,7 @@ namespace Knapcode.MiniZip
                 await originalStream.CopyToAsync(innerStream);
                 innerStream.Write(suffix, 0, suffix.Length);
 
-                var target = new BoundedStream(innerStream, prefix.Length, innerStream.Length - suffix.Length);
+                var target = new BoundedStream(innerStream, prefix.Length, (prefix.Length + originalStream.Length) - 1);
                 var reader = new ZipDirectoryReader(target);
                 var expectedSize = originalStream.Length;
 
@@ -53,14 +53,14 @@ namespace Knapcode.MiniZip
             public void ObservesBounds()
             {
                 // Arrange
-                var destination = new byte[_bytes.Length];
-                var expectedRead = _endPosition - _startPosition;
+                var destination = new byte[_bytes.Length * 2];
+                var expectedRead = (_endPosition - _startPosition) + 1;
 
                 // Arrange & Act
                 var read = _target.Read(destination, 0, destination.Length);
 
                 // Assert
-                Verify(_startPosition, _endPosition, destination, _bytes.Length- expectedRead);
+                Verify(_startPosition, _endPosition, destination, destination.Length - expectedRead);
                 Assert.Equal(expectedRead, read);
             }
 
@@ -69,7 +69,7 @@ namespace Knapcode.MiniZip
             {
                 // Arrange
                 var destination = new byte[_bytes.Length];
-                var expectedRead = _endPosition - (_startPosition + 2);
+                var expectedRead = (_endPosition - _startPosition) - 1;
                 _target.Position = 2;
 
                 // Arrange & Act
@@ -86,14 +86,23 @@ namespace Knapcode.MiniZip
                 // Arrange
                 var destination = new byte[_bytes.Length];
                 var expectedRead = 0;
-                _target.Position = 7;
+                _target.Position = 8;
 
                 // Arrange & Act
                 var read = _target.Read(destination, 0, destination.Length);
 
                 // Assert
-                Verify(0, 0, destination, _bytes.Length - expectedRead);
+                Verify(0, -1, destination, destination.Length);
                 Assert.Equal(expectedRead, read);
+            }
+        }
+
+        public class Length : Facts
+        {
+            [Fact]
+            public void IsBasedOffBounds()
+            {
+                Assert.Equal((_endPosition - _startPosition) + 1, _target.Length);
             }
         }
 
@@ -114,17 +123,17 @@ namespace Knapcode.MiniZip
             }
 
             [Fact]
-            public void ResetsInnerPositionStreamThatIsGreaterThanUpperBound()
+            public void DoesNotInnerPositionStreamThatIsGreaterThanUpperBound()
             {
                 // Arrange
-                _innerStream.Position = _endPosition + 1;
+                _innerStream.Position = _endPosition + 2;
 
                 // Act
                 var position = _target.Position;
 
                 // Assert
-                Assert.Equal(_endPosition - _startPosition, position);
-                Assert.Equal(_endPosition, _innerStream.Position);
+                Assert.Equal(_target.Length + 1, position);
+                Assert.Equal(_endPosition + 2, _innerStream.Position);
             }
 
             [Fact]
@@ -189,7 +198,7 @@ namespace Knapcode.MiniZip
 
             protected void Verify(int startPosition, int endPosition, byte[] actual, int extraBytes)
             {
-                var count = endPosition - startPosition;
+                var count = (endPosition - startPosition) + 1;
                 var expected = new byte[count  + extraBytes];
                 Buffer.BlockCopy(_bytes, startPosition, expected, 0, count);
                 Assert.Equal(expected, actual);

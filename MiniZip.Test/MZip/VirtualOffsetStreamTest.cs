@@ -23,12 +23,6 @@ namespace Knapcode.MiniZip
                 var innerStream = new MemoryStream();
 
                 var virtualOffset = (long)(expected.Zip64?.OffsetOfCentralDirectory ?? expected.OffsetOfCentralDirectory);
-                virtualOffset -= sizeof(uint);
-                if (virtualOffset < 0)
-                {
-                    virtualOffset = 0;
-                }
-                
                 originalStream.Position = virtualOffset;
 
                 await originalStream.CopyToAsync(innerStream);
@@ -53,14 +47,56 @@ namespace Knapcode.MiniZip
         public class Read : Facts
         {
             [Fact]
-            public void ReadInnerStream()
+            public void ReadInnerStreamAllAtOnce()
             {
                 // Arrange
                 var destination = new byte[_bytes.Length * 2];
                 var expectedRead = _bytes.Length;
+                _target.Position = _virtualOffset;
 
                 // Act
                 var read = _target.Read(destination, 0, destination.Length);
+
+                // Assert
+                Verify(0, _bytes.Length, destination, _bytes.Length);
+                Assert.Equal(expectedRead, read);
+            }
+
+            [Fact]
+            public void ReadInnerStreamByteByByte()
+            {
+                // Arrange
+                var destination = new byte[_bytes.Length * 2];
+                var expectedRead = _bytes.Length;
+                _target.Position = _virtualOffset;
+
+                // Act
+                var read = 0;
+                for (var offset = 0; offset < destination.Length; offset++)
+                {
+                    read += _target.Read(destination, offset, 1);
+                }
+
+                // Assert
+                Verify(0, _bytes.Length, destination, _bytes.Length);
+                Assert.Equal(expectedRead, read);
+            }
+
+            [Fact]
+            public void ReadInnerStreamByteByByteInReverse()
+            {
+                // Arrange
+                var destination = new byte[_bytes.Length * 2];
+                var expectedRead = _bytes.Length;
+                _target.Position = _target.Length - 1;
+
+                // Act
+                var read = 0;
+                for (var offset = _bytes.Length - 1; offset >= 0; offset--)
+                {
+                    read += _target.Read(destination, offset, 1);
+                    _target.Position -= 2;
+                }
 
                 // Assert
                 Verify(0, _bytes.Length, destination, _bytes.Length);
@@ -122,25 +158,22 @@ namespace Knapcode.MiniZip
         public class Position : Facts
         {
             [Fact]
-            public void RejectsSettingPositionToLessThanVirtualOffset()
+            public void AllowsSettingPositionToLessThanVirtualOffset()
             {
-                var exception = Assert.Throws<ArgumentOutOfRangeException>(
-                    () => _target.Position = _virtualOffset - 1);
-
-                Assert.Contains(Strings.PositionBeforeVirtualOffset, exception.Message);
-            }
-
-            [Fact]
-            public void ReturnsInnerStreamPositionPlusVirtualOffset()
-            {
-                // Arrange
-                _innerStream.Position = 2;
-
-                // Act
-                var position = _target.Position;
+                // Arrange & Act
+                _target.Position = _virtualOffset - 1;
 
                 // Assert
-                Assert.Equal(_virtualOffset + 2, position);
+                Assert.Equal(_virtualOffset - 1, _target.Position);
+            }
+        }
+
+        public class Length : Facts
+        {
+            [Fact]
+            public void IsVirtualOffsetPlusInnerLength()
+            {
+                Assert.Equal(_virtualOffset + _bytes.Length, _target.Length);
             }
         }
 

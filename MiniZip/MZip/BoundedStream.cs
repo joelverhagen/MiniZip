@@ -47,7 +47,7 @@ namespace Knapcode.MiniZip
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => false;
-        public override long Length => _endPosition - _startPosition;
+        public override long Length => (_endPosition - _startPosition) + 1;
 
         protected override void Dispose(bool disposing)
         {
@@ -61,10 +61,6 @@ namespace Knapcode.MiniZip
                 if (_innerStream.Position < _startPosition)
                 {
                     _innerStream.Position = _startPosition;
-                }
-                else if (_innerStream.Position > _endPosition)
-                {
-                    _innerStream.Position = _endPosition;
                 }
 
                 _firstSeek = true;
@@ -111,7 +107,7 @@ namespace Knapcode.MiniZip
                 throw new InvalidOperationException(Strings.InnerStreamPositionBeforeBounds);
             }
 
-            var remaining = (int)(_endPosition - _innerStream.Position);
+            var remaining = (int)(_endPosition - _innerStream.Position) + 1;
             if (remaining <= 0)
             {
                 return 0;

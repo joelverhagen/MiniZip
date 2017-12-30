@@ -8,6 +8,7 @@ namespace Knapcode.MiniZip
     internal class VirtualOffsetStream : Stream
     {
         private readonly Stream _innerStream;
+        private long _position;
         private readonly long _virtualOffset;
 
         public VirtualOffsetStream(Stream innerStream, long virtualOffset)
@@ -25,7 +26,7 @@ namespace Knapcode.MiniZip
         {
             get
             {
-                return _virtualOffset + _innerStream.Position;
+                return _position;
             }
 
             set
@@ -34,12 +35,8 @@ namespace Knapcode.MiniZip
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), Strings.PositionMustBeNonNegative);
                 }
-                else if (value < _virtualOffset)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), Strings.PositionBeforeVirtualOffset);
-                }
 
-                _innerStream.Position = value - _virtualOffset;
+                _position = value;
             }
         }
 
@@ -50,21 +47,31 @@ namespace Knapcode.MiniZip
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            VerifyPosition();
-            return await _innerStream.ReadAsync(buffer, offset, count, cancellationToken);
+            SetInnerPosition();
+            var read = await _innerStream.ReadAsync(buffer, offset, count, cancellationToken);
+            Position += read;
+            return read;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            VerifyPosition();
-            return _innerStream.Read(buffer, offset, count);
+            SetInnerPosition();
+            var read = _innerStream.Read(buffer, offset, count);
+            Position += read;
+            return read;
         }
 
-        private void VerifyPosition()
+        private void SetInnerPosition()
         {
             if (Position < _virtualOffset)
             {
                 throw new InvalidOperationException(Strings.PositionBeforeVirtualOffset);
+            }
+
+            var innerPosition = Position - _virtualOffset;
+            if (_innerStream.Position != innerPosition)
+            {
+                _innerStream.Position = innerPosition;
             }
         }
 
