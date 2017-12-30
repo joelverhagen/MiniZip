@@ -89,6 +89,11 @@ namespace Knapcode.MiniZip
         public bool IsDisposed => _disposed != 0;
 
         /// <summary>
+        /// The stream containing the ZIP archive that is read by this instance.
+        /// </summary>
+        public Stream Stream => _stream;
+
+        /// <summary>
         /// Read the stream and gather all of the ZIP directory metadata. This extracts ZIP entry information and
         /// relative offsets. This method does not read the file entry contents or decompress anything. This method
         /// also does not decrypt anything.
