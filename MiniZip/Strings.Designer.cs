@@ -79,6 +79,15 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Archives spanning multiple disks are not supported..
+        /// </summary>
+        internal static string ArchivesSpanningMultipleDisksNotSupported {
+            get {
+                return ResourceManager.GetString("ArchivesSpanningMultipleDisksNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The buffer was not fully consumed..
         /// </summary>
         internal static string BufferNotConsumed {

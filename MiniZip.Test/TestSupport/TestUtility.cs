@@ -32,6 +32,9 @@ namespace Knapcode.MiniZip
             @"System.IO.Compression\badzipfiles\CDoffsetOutOfBounds.zip",
             @"System.IO.Compression\badzipfiles\EOCDmissing.zip",
             @"System.IO.Compression\badzipfiles\numberOfEntriesDifferent.zip",
+            @"Custom\Spanning.z01",
+            @"Custom\Spanning.z02",
+            @"Custom\Spanning.zip",
         };
 
         public static IReadOnlyList<string> ValidTestDataPaths => TestDataPaths

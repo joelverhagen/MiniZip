@@ -147,7 +147,11 @@ namespace Knapcode.MiniZip
             {
                 @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
                 KnownException.Create<MiniZipException>("Cannot find central directory.")
-            }
+            },
+            {
+                @"Custom\Spanning.zip",
+                KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
+            },
         };
 
         private static IReadOnlyDictionary<string, KnownException> CasesNotHandledByBcl = new Dictionary<string, KnownException>
@@ -255,7 +259,7 @@ namespace Knapcode.MiniZip
             {
                 @"System.IO.Compression\StrangeZipFiles\dataDescriptor.zip",
                 ConvertToForwardSlashes
-            }
+            },
         };
 
         private static void ConvertToForwardSlashes(ZipDirectory zipDirectory)
@@ -276,7 +280,11 @@ namespace Knapcode.MiniZip
             {
                 @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
                 KnownException.Create<MiniZipException>(Strings.InvalidCentralDirectorySignature)
-            }
+            },
+            {
+                @"Custom\Spanning.zip",
+                KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
+            },
         };
 
         private static IReadOnlyDictionary<string, KnownException> CasesNotHandledBySharpZipLib = new Dictionary<string, KnownException>
@@ -288,7 +296,7 @@ namespace Knapcode.MiniZip
             {
                 @"System.IO.Compression\compat\NullCharFileName_FromWindows.zip",
                 KnownException.Create<ArgumentException>("Illegal characters in path.\r\nParameter name: path")
-            }
+            },
         };
 
         public static IEnumerable<object[]> TestDataPaths => TestUtility

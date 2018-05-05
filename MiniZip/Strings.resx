@@ -190,4 +190,7 @@
   <data name="PositionBeforeVirtualOffset" xml:space="preserve">
     <value>The position of the stream must not be before the virtual offset.</value>
   </data>
+  <data name="ArchivesSpanningMultipleDisksNotSupported" xml:space="preserve">
+    <value>Archives spanning multiple disks are not supported.</value>
+  </data>
 </root>

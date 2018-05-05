@@ -134,8 +134,11 @@ namespace Knapcode.MiniZip
             await ReadFullyAsync(zip.Comment);
 
             // Check if the archive is Zip64.
-            long offsetOfCentralDirectory;
+            ulong numberOfThisDisk;
+            ulong diskWithStartOfCentralDirectory;
             ulong entriesInThisDisk;
+            ulong entriesForWholeCentralDirectory;
+            long offsetOfCentralDirectory;
             if (zip.NumberOfThisDisk == 0xffff
                 || zip.DiskWithStartOfCentralDirectory == 0xffff
                 || zip.EntriesInThisDisk == 0xffff
@@ -183,8 +186,11 @@ namespace Knapcode.MiniZip
                     zip.Zip64.OffsetOfCentralDirectory = buffer.ReadUInt64();
                 }
 
-                offsetOfCentralDirectory = (long)zip.Zip64.OffsetOfCentralDirectory;
+                numberOfThisDisk = zip.Zip64.NumberOfThisDisk;
+                diskWithStartOfCentralDirectory = zip.Zip64.DiskWithStartOfCentralDirectory;
                 entriesInThisDisk = zip.Zip64.EntriesInThisDisk;
+                entriesForWholeCentralDirectory = zip.Zip64.EntriesForWholeCentralDirectory;
+                offsetOfCentralDirectory = (long)zip.Zip64.OffsetOfCentralDirectory;
 
                 if ((zip.Zip64.NumberOfThisDisk != zip.NumberOfThisDisk && zip.NumberOfThisDisk != 0xffff)
                     || (zip.Zip64.DiskWithStartOfCentralDirectory != zip.DiskWithStartOfCentralDirectory && zip.DiskWithStartOfCentralDirectory != 0xffff)
@@ -198,8 +204,18 @@ namespace Knapcode.MiniZip
             }
             else
             {
-                offsetOfCentralDirectory = zip.OffsetOfCentralDirectory;
+                numberOfThisDisk = zip.NumberOfThisDisk;
+                diskWithStartOfCentralDirectory = zip.DiskWithStartOfCentralDirectory;
                 entriesInThisDisk = zip.EntriesInThisDisk;
+                entriesForWholeCentralDirectory = zip.EntriesForWholeCentralDirectory;
+                offsetOfCentralDirectory = zip.OffsetOfCentralDirectory;
+            }
+
+            if (numberOfThisDisk != 0
+                || diskWithStartOfCentralDirectory != 0
+                || entriesInThisDisk != entriesForWholeCentralDirectory)
+            {
+                throw new MiniZipException(Strings.ArchivesSpanningMultipleDisksNotSupported);
             }
 
             _stream.Seek(offsetOfCentralDirectory, SeekOrigin.Begin);
