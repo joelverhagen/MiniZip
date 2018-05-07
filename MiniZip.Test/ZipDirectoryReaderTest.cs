@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -8,6 +10,97 @@ namespace Knapcode.MiniZip
 {
     public class ZipDirectoryReaderTest
     {
+        public class ReadLocalFileHeaderAsync
+        {
+            [Fact]
+            public async Task RejectsEncryptedFiles()
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData(@"SharpZipLib\FastZipHandling.Encryption\0.zip"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries[0];
+
+                    // Act & Assert
+                    var ex = await Assert.ThrowsAsync<MiniZipException>(
+                        () => reader.ReadLocalFileHeaderAsync(directory, entry));
+                    Assert.Equal("Archives containing encrypted files are not supported.", ex.Message);
+                }
+            }
+
+            [Theory]
+            [InlineData(@"Custom\crc32collide_with_descriptor_and_signature.zip")]
+            [InlineData(@"System.IO.Compression\StrangeZipFiles\dataDescriptor.zip")]
+            public async Task ReadsDataDescriptorWithSignature(string resourceName)
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData(resourceName))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries[0];
+
+                    // Act
+                    var localFileHeader = await reader.ReadLocalFileHeaderAsync(directory, entry);
+
+                    // Assert
+                    Assert.NotNull(localFileHeader.DataDescriptor);
+                    Assert.True(localFileHeader.DataDescriptor.HasSignature);
+                    Assert.Equal(entry.Crc32, localFileHeader.DataDescriptor.Crc32);
+                    Assert.Equal(entry.CompressedSize, localFileHeader.DataDescriptor.CompressedSize);
+                    Assert.Equal(entry.UncompressedSize, localFileHeader.DataDescriptor.UncompressedSize);
+                }
+            }
+
+            [Theory]
+            [InlineData(@"Custom\crc32collide_with_descriptor_no_signature.zip")]
+            [InlineData(@"Custom\crc32collide_with_descriptor_no_signature_gap.zip")]
+            public async Task ReadsDataDescriptorWithoutSignature(string resourceName)
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData(resourceName))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries[0];
+
+                    // Act
+                    var localFileHeader = await reader.ReadLocalFileHeaderAsync(directory, entry);
+
+                    // Assert
+                    Assert.NotNull(localFileHeader.DataDescriptor);
+                    Assert.False(localFileHeader.DataDescriptor.HasSignature);
+                    Assert.Equal(entry.Crc32, localFileHeader.DataDescriptor.Crc32);
+                    Assert.Equal(entry.CompressedSize, localFileHeader.DataDescriptor.CompressedSize);
+                    Assert.Equal(entry.UncompressedSize, localFileHeader.DataDescriptor.UncompressedSize);
+                }
+            }
+
+            [Theory]
+            [MemberData(nameof(ReadsLocalHeaderOfAllFilesData))]
+            public async Task ReadsLocalHeaderOfAllFiles(string resourceName)
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData(resourceName))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+
+                    // Act
+                    foreach (var entry in directory.Entries)
+                    {
+                        var localFileHeader = await reader.ReadLocalFileHeaderAsync(directory, entry);
+                    }
+                }
+            }
+
+            public static IEnumerable<object[]> ReadsLocalHeaderOfAllFilesData => TestUtility
+                .ValidTestDataPaths
+                .Except(TestUtility.InvalidLocalFileHeaders)
+                .Select(x => new[] { x });
+        }
+
         public class ReadAsync
         {
             [Fact]

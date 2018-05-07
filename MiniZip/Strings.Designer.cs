@@ -133,11 +133,38 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The values found in the file data descriptor do not match the central directory..
+        /// </summary>
+        internal static string DataDescriptorValuesDoNotMatchCentralDirectory {
+            get {
+                return ResourceManager.GetString("DataDescriptorValuesDoNotMatchCentralDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archives containing encrypted files are not supported..
+        /// </summary>
+        internal static string EncryptedFilesNotSupported {
+            get {
+                return ResourceManager.GetString("EncryptedFilesNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The end position must be less than the inner stream length..
         /// </summary>
         internal static string EndPositionBeyondLength {
             get {
                 return ResourceManager.GetString("EndPositionBeyondLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The provided central directory header is not associated with the provided ZIP directory..
+        /// </summary>
+        internal static string HeaderDoesNotMatchDirectory {
+            get {
+                return ResourceManager.GetString("HeaderDoesNotMatchDirectory", resourceCulture);
             }
         }
         
@@ -174,6 +201,15 @@ namespace Knapcode.MiniZip {
         internal static string InvalidContentRangeHeader {
             get {
                 return ResourceManager.GetString("InvalidContentRangeHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid local file header signature found..
+        /// </summary>
+        internal static string InvalidLocalFileHeaderSignature {
+            get {
+                return ResourceManager.GetString("InvalidLocalFileHeaderSignature", resourceCulture);
             }
         }
         

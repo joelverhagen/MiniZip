@@ -193,4 +193,16 @@
   <data name="ArchivesSpanningMultipleDisksNotSupported" xml:space="preserve">
     <value>Archives spanning multiple disks are not supported.</value>
   </data>
+  <data name="InvalidLocalFileHeaderSignature" xml:space="preserve">
+    <value>Invalid local file header signature found.</value>
+  </data>
+  <data name="EncryptedFilesNotSupported" xml:space="preserve">
+    <value>Archives containing encrypted files are not supported.</value>
+  </data>
+  <data name="HeaderDoesNotMatchDirectory" xml:space="preserve">
+    <value>The provided central directory header is not associated with the provided ZIP directory.</value>
+  </data>
+  <data name="DataDescriptorValuesDoNotMatchCentralDirectory" xml:space="preserve">
+    <value>The values found in the file data descriptor do not match the central directory.</value>
+  </data>
 </root>

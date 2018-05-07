@@ -60,6 +60,6 @@ namespace Knapcode.MiniZip
         /// <summary>
         /// Data about the ZIP entries.
         /// </summary>
-        public List<ZipEntry> Entries { get; set; }
+        public List<CentralDirectoryHeader> Entries { get; set; }
     }
 }

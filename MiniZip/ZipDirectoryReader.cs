@@ -94,6 +94,151 @@ namespace Knapcode.MiniZip
         public Stream Stream => _stream;
 
         /// <summary>
+        /// Reads a specific local file header given a central directory header for a file.
+        /// </summary>
+        /// <param name="directory">The ZIP directory instance containing the provided <paramref name="entry"/>.</param>
+        /// <param name="entry">The central directory header to read the local file header for.</param>
+        /// <returns>The local file header.</returns>
+        public async Task<LocalFileHeader> ReadLocalFileHeaderAsync(ZipDirectory directory, CentralDirectoryHeader entry)
+        {
+            if (directory == null)
+            {
+                throw new ArgumentNullException(nameof(directory));
+            }
+
+            if (entry == null)
+            {
+                throw new ArgumentNullException(nameof(entry));
+            }
+
+            var entries = directory.Entries ?? new List<CentralDirectoryHeader>();
+            if (!entries.Contains(entry))
+            {
+                throw new ArgumentException(Strings.HeaderDoesNotMatchDirectory, nameof(entry));
+            }
+
+            if ((entry.Flags & (ushort)ZipEntryFlags.Encrypted) != 0)
+            {
+                throw new MiniZipException(Strings.EncryptedFilesNotSupported);
+            }
+
+            var zip64 = entry.Zip64DataFields.FirstOrDefault();
+            var localHeaderOffset = zip64?.LocalHeaderOffset ?? entry.LocalHeaderOffset;
+            _stream.Position = (long)localHeaderOffset;
+
+            if (await ReadUInt32Async() != ZipConstants.LocalFileHeaderSignature)
+            {
+                throw new MiniZipException(Strings.InvalidLocalFileHeaderSignature);
+            }
+
+            var localEntry = new LocalFileHeader();
+
+            using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.LocalFileHeaderSizeWithoutSignature))
+            {
+                localEntry.VersionToExtract = buffer.ReadUInt16();
+                localEntry.Flags = buffer.ReadUInt16();
+                localEntry.CompressionMethod = buffer.ReadUInt16();
+                localEntry.LastModifiedTime = buffer.ReadUInt16();
+                localEntry.LastModifiedDate = buffer.ReadUInt16();
+                localEntry.Crc32 = buffer.ReadUInt32();
+                localEntry.CompressedSize = buffer.ReadUInt32();
+                localEntry.UncompressedSize = buffer.ReadUInt32();
+                localEntry.NameSize = buffer.ReadUInt16();
+                localEntry.ExtraFieldSize = buffer.ReadUInt16();
+            }
+
+            localEntry.Name = new byte[localEntry.NameSize];
+            await ReadFullyAsync(localEntry.Name);
+
+            localEntry.ExtraField = new byte[localEntry.ExtraFieldSize];
+            await ReadFullyAsync(localEntry.ExtraField);
+
+            localEntry.DataFields = ReadDataFields(localEntry.ExtraField);
+            localEntry.Zip64DataFields = ReadZip64DataFields(localEntry);
+
+            // Try to read the data descriptor.
+            if ((localEntry.Flags & (ushort)ZipEntryFlags.DataDescriptor) != 0)
+            {
+                localEntry.DataDescriptor = await ReadDataDescriptor(directory, entries, entry, zip64, localEntry);
+            }
+
+            return localEntry;
+        }
+
+        private async Task<DataDescriptor> ReadDataDescriptor(
+            ZipDirectory directory,
+            List<CentralDirectoryHeader> entries,
+            CentralDirectoryHeader entry,
+            Zip64DataField zip64,
+            LocalFileHeader localEntry)
+        {
+            var compressedSize = zip64?.CompressedSize ?? entry.CompressedSize;
+            var uncompressedSize = zip64?.UncompressedSize ?? entry.UncompressedSize;
+
+            var dataDescriptorPosition = entry.LocalHeaderOffset
+                + ZipConstants.LocalFileHeaderSize
+                + localEntry.NameSize
+                + localEntry.ExtraFieldSize
+                + compressedSize;
+
+            _stream.Position = (long)dataDescriptorPosition;
+
+            var dataDescriptor = new DataDescriptor();
+
+            using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.DataDescriptorSize))
+            {
+                var fieldA = buffer.ReadUInt32();
+                var fieldB = buffer.ReadUInt32();
+                var fieldC = buffer.ReadUInt32();
+                var fieldD = buffer.ReadUInt32();
+
+                // Check the first field to see if is the signature. This is the most reliable check but can yield
+                // false negatives. This is because it's possible for the CRC-32 to be the same as the optional
+                // data descriptor signature. There is no possibility for false positive. That is, if the first
+                // byte does not match signature, then the first byte is definitely the CRC-32.
+                var firstFieldImpliesNoSignature = fieldA != ZipConstants.DataDescriptorSignature;
+
+                // 1. Use the known field values from the central directory, given the first field matches the signature.
+                var valuesImplySignature = !firstFieldImpliesNoSignature
+                    && fieldB == entry.Crc32
+                    && fieldC == compressedSize
+                    && fieldD == uncompressedSize;
+                if (valuesImplySignature)
+                {
+                    return CreateDataDescriptor(fieldB, fieldC, fieldD, hasSignature: true);
+                }
+
+                // 2. Use the known field values from the central directory.
+                var valuesImplyNoSignature = fieldA == entry.Crc32
+                    && fieldB == compressedSize
+                    && fieldC == uncompressedSize;
+                if (valuesImplyNoSignature)
+                {
+                    return CreateDataDescriptor(fieldA, fieldB, fieldC, hasSignature: false);
+                }
+
+                // 3. Use just the signature.
+                if (!firstFieldImpliesNoSignature)
+                {
+                    return CreateDataDescriptor(fieldB, fieldC, fieldD, hasSignature: true);
+                }
+
+                return CreateDataDescriptor(fieldA, fieldB, fieldC, hasSignature: false);
+            }
+        }
+
+        private static DataDescriptor CreateDataDescriptor(uint crc32, uint compressedSize, uint uncompressedSize, bool hasSignature)
+        {
+            return new DataDescriptor
+            {
+                HasSignature = hasSignature,
+                Crc32 = crc32,
+                CompressedSize = compressedSize,
+                UncompressedSize = uncompressedSize,
+            };
+        }
+
+        /// <summary>
         /// Read the stream and gather all of the ZIP directory metadata. This extracts ZIP entry information and
         /// relative offsets. This method does not read the file entry contents or decompress anything. This method
         /// also does not decrypt anything.
@@ -220,7 +365,7 @@ namespace Knapcode.MiniZip
 
             _stream.Seek(offsetOfCentralDirectory, SeekOrigin.Begin);
 
-            zip.Entries = new List<ZipEntry>();
+            zip.Entries = new List<CentralDirectoryHeader>();
             for (ulong i = 0; i < entriesInThisDisk; i++)
             {
                 zip.Entries.Add(await ReadEntryAsync());
@@ -229,14 +374,14 @@ namespace Knapcode.MiniZip
             return zip;
         }
 
-        private async Task<ZipEntry> ReadEntryAsync()
+        private async Task<CentralDirectoryHeader> ReadEntryAsync()
         {
             if (await ReadUInt32Async() != ZipConstants.CentralDirectoryEntryHeaderSignature)
             {
                 throw new MiniZipException(Strings.InvalidCentralDirectorySignature);
             }
 
-            var entry = new ZipEntry();
+            var entry = new CentralDirectoryHeader();
 
             using (var buffer = await LoadBinaryReaderAsync(_buffer, ZipConstants.CentralDirectoryEntryHeaderSizeWithoutSignature))
             {
@@ -298,10 +443,36 @@ namespace Knapcode.MiniZip
             return dataFields;
         }
 
-        private List<Zip64DataField> ReadZip64DataFields(ZipEntry entry)
+        private List<Zip64CentralDirectoryDataField> ReadZip64DataFields(CentralDirectoryHeader entry)
         {
-            // Zip64 extended information extra field
-            var zip64DataFields = new List<Zip64DataField>();
+            return ReadZip64DataFields(entry, ZipConstants.MaximumZip64CentralDirectoryDataFieldSize);
+        }
+
+        private List<Zip64LocalFileDataField> ReadZip64DataFields(LocalFileHeader entry)
+        {
+            // The Zip64 data field in the local file header is a subset of the information in the central directory
+            // header, so use the central directory flow and map the input/output.
+            var centralDirectoryHeader = new CentralDirectoryHeader
+            {
+                DataFields = entry.DataFields,
+                UncompressedSize = entry.UncompressedSize,
+                CompressedSize = entry.CompressedSize,
+            };
+
+            var fields = ReadZip64DataFields(centralDirectoryHeader, ZipConstants.MaximumZip64LocalFileDataFieldSize);
+
+            return fields
+                .Select(x => new Zip64LocalFileDataField
+                {
+                    CompressedSize = x.CompressedSize,
+                    UncompressedSize = x.UncompressedSize,
+                })
+                .ToList();
+        }
+
+        private List<Zip64CentralDirectoryDataField> ReadZip64DataFields(CentralDirectoryHeader entry, ushort maximumDataSize)
+        {
+            var zip64DataFields = new List<Zip64CentralDirectoryDataField>();
             foreach (var dataField in entry.DataFields)
             {
                 if (dataField.HeaderId != ZipConstants.Zip64DataFieldHeaderId)
@@ -309,14 +480,14 @@ namespace Knapcode.MiniZip
                     continue;
                 }
 
-                if (dataField.DataSize > ZipConstants.MaximumZip64DataFieldSize)
+                if (dataField.DataSize > maximumDataSize)
                 {
                     throw new MiniZipException(Strings.InvalidZip64ExtendedInformationLength);
                 }
 
                 using (var reader = GetBinaryReader(dataField.Data))
                 {
-                    var field = new Zip64DataField();
+                    var field = new Zip64CentralDirectoryDataField();
 
                     if (entry.UncompressedSize == 0xffffffff)
                     {

@@ -7,15 +7,36 @@
     public static class ZipConstants
     {
         /// <summary>
-        /// Size of end of central record, excluding variable fields.
+        /// The size of the end of central record, excluding variable fields.
         /// </summary>
         public const int EndOfCentralDirectorySize = 22;
 
         /// <summary>
-        /// The size of end of central record, excluding the <see cref="EndOfCentralDirectorySignature"/> and variable
+        /// The size of the end of central record, excluding the <see cref="EndOfCentralDirectorySignature"/> and variable
         /// fields.
         /// </summary>
         public const int EndOfCentralDirectorySizeWithoutSignature = EndOfCentralDirectorySize - sizeof(uint);
+
+        /// <summary>
+        /// The size of the local file header record, excluding variable fields.
+        /// </summary>
+        public const int LocalFileHeaderSize = 30;
+
+        /// <summary>
+        /// The size of the local file header record, excluding the <see cref="LocalFileHeaderSignature"/> variable
+        /// fields.
+        /// </summary>
+        public const int LocalFileHeaderSizeWithoutSignature = LocalFileHeaderSize - sizeof(uint);
+
+        /// <summary>
+        /// The size of the data descriptor, including the optional <see cref="DataDescriptorSignature"/>.
+        /// </summary>
+        public const int DataDescriptorSize = 16;
+
+        /// <summary>
+        /// The size of the data descriptor, excluding the <see cref="DataDescriptorSignature"/>.
+        /// </summary>
+        public const int DataDescriptorSizeWithoutSignature = DataDescriptorSize - sizeof(uint);
 
         /// <summary>
         /// The signature for the central header.
@@ -38,14 +59,29 @@
         public const uint EndOfCentralDirectorySignature = 'P' | ('K' << 8) | (5 << 16) | (6 << 24);
 
         /// <summary>
-        /// The header ID for the Zip64 extended information extra field.
+        /// The signature for the end of central directory record.
         /// </summary>
-        public const ushort Zip64DataFieldHeaderId = 1;
+        public const uint LocalFileHeaderSignature = 'P' | ('K' << 8) | (3 << 16) | (4 << 24);
 
         /// <summary>
-        /// The size of the Zip64 extended information extra field.
+        /// The optional signature for the data descriptor.
         /// </summary>
-        public const ushort MaximumZip64DataFieldSize = 28;
+        public const uint DataDescriptorSignature = 'P' | ('K' << 8) | (7 << 16) | (8 << 24);
+
+        /// <summary>
+        /// The header ID for the Zip64 extended information extra field.
+        /// </summary>
+        public const ushort Zip64DataFieldHeaderId = 0x0001;
+
+        /// <summary>
+        /// The maximum size of the Zip64 extended information extra field in the central directory header.
+        /// </summary>
+        public const ushort MaximumZip64CentralDirectoryDataFieldSize = 28;
+
+        /// <summary>
+        /// The maximum size of the Zip64 extended information extra field in the local file header.
+        /// </summary>
+        public const ushort MaximumZip64LocalFileDataFieldSize = 16;
 
         /// <summary>
         /// The size of the Zip64 locator record, excluding the <see cref="Zip64EndOfCentralDirectoryLocatorSignature"/>.

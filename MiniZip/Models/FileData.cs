@@ -3,15 +3,10 @@
 namespace Knapcode.MiniZip
 {
     /// <summary>
-    /// Metadata about a ZIP entry.
+    /// Fields shared between <see cref="LocalFileHeader"/> and <see cref="CentralDirectoryHeader"/>.
     /// </summary>
-    public class ZipEntry
+    public class FileData
     {
-        /// <summary>
-        /// The version made by.
-        /// </summary>
-        public ushort VersionMadeBy { get; set; }
-
         /// <summary>
         /// The version needed to extract.
         /// </summary>
@@ -63,31 +58,6 @@ namespace Knapcode.MiniZip
         public ushort ExtraFieldSize { get; set; }
 
         /// <summary>
-        /// The size of the comment field.
-        /// </summary>
-        public ushort CommentSize { get; set; }
-
-        /// <summary>
-        /// The disk number start.
-        /// </summary>
-        public ushort DiskNumberStart { get; set; }
-
-        /// <summary>
-        /// The internal file attributes.
-        /// </summary>
-        public ushort InternalAttributes { get; set; }
-
-        /// <summary>
-        /// The external file attributes.
-        /// </summary>
-        public uint ExternalAttributes { get; set; }
-
-        /// <summary>
-        /// The relative offset of local header.
-        /// </summary>
-        public uint LocalHeaderOffset { get; set; }
-
-        /// <summary>
         /// The bytes of the name field.
         /// </summary>
         public byte[] Name { get; set; }
@@ -98,18 +68,8 @@ namespace Knapcode.MiniZip
         public byte[] ExtraField { get; set; }
 
         /// <summary>
-        /// The bytes of the comment field.
-        /// </summary>
-        public byte[] Comment { get; set; }
-
-        /// <summary>
         /// The parsed split data fields.
         /// </summary>
         public List<ZipDataField> DataFields { get; set; }
-
-        /// <summary>
-        /// The data fields that are Zip64 extended information.
-        /// </summary>
-        public List<Zip64DataField> Zip64DataFields { get; set; }
     }
 }

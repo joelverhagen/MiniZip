@@ -5,49 +5,49 @@ using System.Text;
 namespace Knapcode.MiniZip
 {
     /// <summary>
-    /// Extension methods for <see cref="ZipEntry"/>.
+    /// Extension methods for <see cref="CentralDirectoryHeader"/>.
     /// </summary>
     public static class ZipEntryExtensions
     {
         private static readonly DateTime InvalidDateTime = new DateTime(1980, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         /// <summary>
-        /// Determine the compressed size of the <see cref="ZipEntry"/>, in bytes. This method takes all relevant
+        /// Determine the compressed size of the <see cref="CentralDirectoryHeader"/>, in bytes. This method takes all relevant
         /// details in the entry into account.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
-        public static ulong GetCompressedSize(this ZipEntry entry)
+        public static ulong GetCompressedSize(this CentralDirectoryHeader entry)
         {
             return entry.Zip64DataFields.SingleOrDefault()?.CompressedSize ?? entry.CompressedSize;
         }
 
         /// <summary>
-        /// Determine the uncompressed size of the <see cref="ZipEntry"/>, in bytes. This method takes all relevant
+        /// Determine the uncompressed size of the <see cref="CentralDirectoryHeader"/>, in bytes. This method takes all relevant
         /// details in the entry into account.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
-        public static ulong GetUncompressedSize(this ZipEntry entry)
+        public static ulong GetUncompressedSize(this CentralDirectoryHeader entry)
         {
             return entry.Zip64DataFields.SingleOrDefault()?.UncompressedSize ?? entry.UncompressedSize;
         }
 
         /// <summary>
-        /// Determines the full path name of the <see cref="ZipEntry"/> by decoding the name bytes. Uses UTF-8
-        /// encoding if the <see cref="ZipEntry.Flags"/> indicate as such, otherwise uses the default code page.
+        /// Determines the full path name of the <see cref="CentralDirectoryHeader"/> by decoding the name bytes. Uses UTF-8
+        /// encoding if the <see cref="FileData.Flags"/> indicate as such, otherwise uses the default code page.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
-        public static string GetName(this ZipEntry entry)
+        public static string GetName(this CentralDirectoryHeader entry)
         {
             return entry.GetName(encoding: null);
         }
 
         /// <summary>
-        /// Determines the full path name of the <see cref="ZipEntry"/> by decoding the name bytes with the provided
+        /// Determines the full path name of the <see cref="CentralDirectoryHeader"/> by decoding the name bytes with the provided
         /// encoding.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
         /// <param name="encoding">The encoding to decode the bytes with.</param>
-        public static string GetName(this ZipEntry entry, Encoding encoding)
+        public static string GetName(this CentralDirectoryHeader entry, Encoding encoding)
         {
             if (encoding == null)
             {
@@ -62,12 +62,12 @@ namespace Knapcode.MiniZip
         }
 
         /// <summary>
-        /// Determine the last modified time of the <see cref="ZipEntry"/>. The encoded format of the last modified time
+        /// Determine the last modified time of the <see cref="CentralDirectoryHeader"/>. The encoded format of the last modified time
         /// is MS-DOS format. There is no timezone information associated with the output. Defaults to 1980-01-01 if the
         /// last modified time is invalid.
         /// </summary>
         /// <param name="entry">The ZIP entry.</param>
-        public static DateTime GetLastModified(this ZipEntry entry)
+        public static DateTime GetLastModified(this CentralDirectoryHeader entry)
         {
             var year   = 1980 + ((entry.LastModifiedDate & 0b1111_1110_0000_0000) >> 9 );
             var month  =        ((entry.LastModifiedDate & 0b0000_0001_1110_0000) >> 5 );
