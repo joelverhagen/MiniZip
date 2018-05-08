@@ -91,6 +91,9 @@ namespace Knapcode.MiniZip
                     foreach (var entry in directory.Entries)
                     {
                         var localFileHeader = await reader.ReadLocalFileHeaderAsync(directory, entry);
+
+                        // Assert
+                        Assert.NotNull(localFileHeader);
                     }
                 }
             }
@@ -99,6 +102,39 @@ namespace Knapcode.MiniZip
                 .ValidTestDataPaths
                 .Except(TestUtility.InvalidLocalFileHeaders)
                 .Select(x => new[] { x });
+
+            [Fact]
+            public async Task RejectsInvalidLocalFileHeaderSignature()
+            {
+                // Assert
+                using (var stream = TestUtility.BufferTestData(@"System.IO.Compression\badzipfiles\localFileHeaderSignatureWrong.zip"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries[0];
+
+                    // Act & Assert
+                    var ex = await Assert.ThrowsAsync<MiniZipException>(
+                        () => reader.ReadLocalFileHeaderAsync(directory, entry));
+                    Assert.Equal("Invalid local file header signature found.", ex.Message);
+                }
+            }
+
+            [Fact]
+            public async Task RejectsOffsetOutOfBounds()
+            {
+                // Assert
+                using (var stream = TestUtility.BufferTestData(@"System.IO.Compression\badzipfiles\localFileOffsetOutOfBounds.zip"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries[0];
+
+                    // Act & Assert
+                    await Assert.ThrowsAsync<EndOfStreamException>(
+                        () => reader.ReadLocalFileHeaderAsync(directory, entry));
+                }
+            }
         }
 
         public class ReadAsync
