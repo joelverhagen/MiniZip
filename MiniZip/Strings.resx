@@ -152,7 +152,9 @@
     <value>Invalid length for Zip64 extended information extra field.</value>
   </data>
   <data name="NonPartialContentHttpResponse" xml:space="preserve">
-    <value>The HTTP response did not have the expected status code HTTP 206 Partial Content.</value>
+    <value>The HTTP response did not have the expected status code HTTP 206 Partial Content. The response was {0} {1}.</value>
+    <comment>{0} is the response status code.
+{1} is the response reason phrase.</comment>
   </data>
   <data name="NotAllZip64ExtendedInformationWasRead" xml:space="preserve">
     <value>Not all of the Zip64 extended information extra field was read.</value>
@@ -167,7 +169,9 @@
     <value>The stream must support seeking.</value>
   </data>
   <data name="UnsuccessfulHttpStatusCodeWhenGettingLength" xml:space="preserve">
-    <value>The HTTP response did not have a success status code while trying to determine the content length.</value>
+    <value>The HTTP response did not have a success status code while trying to determine the content length. The response was {0} {1}.</value>
+    <comment>{0} is the response status code.
+{1} is the response reason phrase.</comment>
   </data>
   <data name="UTF8Mismatch" xml:space="preserve">
     <value>The UTF-8 flag is set on the ZIP entry but the encoding provided was not UTF-8.</value>
@@ -204,5 +208,15 @@
   </data>
   <data name="DataDescriptorValuesDoNotMatchCentralDirectory" xml:space="preserve">
     <value>The values found in the file data descriptor do not match the central directory.</value>
+  </data>
+  <data name="LengthOfHttpContentChanged" xml:space="preserve">
+    <value>The length of the ZIP file fetched over HTTP changed from the expected {0} bytes to {1} bytes.</value>
+    <comment>{0} is the original length.
+{1} is the new length.</comment>
+  </data>
+  <data name="MissingETagHeader" xml:space="preserve">
+    <value>An ETag header is required when using {0}.{1}.</value>
+    <comment>{0} is the enum type name.
+{1} is the enum value name.</comment>
   </data>
 </root>

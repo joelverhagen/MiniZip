@@ -232,7 +232,25 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The HTTP response did not have the expected status code HTTP 206 Partial Content..
+        ///   Looks up a localized string similar to The length of the ZIP file fetched over HTTP changed from the expected {0} bytes to {1} bytes..
+        /// </summary>
+        internal static string LengthOfHttpContentChanged {
+            get {
+                return ResourceManager.GetString("LengthOfHttpContentChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An ETag header is required when using {0}.{1}..
+        /// </summary>
+        internal static string MissingETagHeader {
+            get {
+                return ResourceManager.GetString("MissingETagHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The HTTP response did not have the expected status code HTTP 206 Partial Content. The response was {0} {1}..
         /// </summary>
         internal static string NonPartialContentHttpResponse {
             get {
@@ -304,7 +322,7 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The HTTP response did not have a success status code while trying to determine the content length..
+        ///   Looks up a localized string similar to The HTTP response did not have a success status code while trying to determine the content length. The response was {0} {1}..
         /// </summary>
         internal static string UnsuccessfulHttpStatusCodeWhenGettingLength {
             get {

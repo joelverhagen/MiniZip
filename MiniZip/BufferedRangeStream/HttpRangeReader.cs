@@ -13,16 +13,22 @@ namespace Knapcode.MiniZip
     {
         private readonly HttpClient _httpClient;
         private readonly Uri _requestUri;
+        private readonly long _length;
+        private readonly EntityTagHeaderValue _etag;
 
         /// <summary>
         /// Initializes the HTTP range reader. The provided <see cref="HttpClient"/> is not disposed by this instance.
         /// </summary>
         /// <param name="httpClient">The HTTP client used to make the HTTP requests.</param>
         /// <param name="requestUri">The URL to request bytes from.</param>
-        public HttpRangeReader(HttpClient httpClient, Uri requestUri)
+        /// <param name="length">The length of the request URI, a size in bytes.</param>
+        /// <param name="etag">The optional etag header to be used for follow-up requests.</param>
+        public HttpRangeReader(HttpClient httpClient, Uri requestUri, long length, EntityTagHeaderValue etag)
         {
             _httpClient = httpClient;
             _requestUri = requestUri;
+            _length = length;
+            _etag = etag;
         }
 
         /// <summary>
@@ -39,11 +45,19 @@ namespace Knapcode.MiniZip
             {
                 request.Headers.Range = new RangeHeaderValue(srcOffset, (srcOffset + count) - 1);
 
+                if (_etag != null)
+                {
+                    request.Headers.IfMatch.Add(_etag);
+                }
+
                 using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
                 {
                     if (response.StatusCode != HttpStatusCode.PartialContent)
                     {
-                        throw new MiniZipException(Strings.NonPartialContentHttpResponse);
+                        throw new MiniZipException(string.Format(
+                            Strings.NonPartialContentHttpResponse,
+                            (int)response.StatusCode,
+                            response.ReasonPhrase));
                     }
 
                     if (response.Content.Headers.ContentRange == null)
@@ -58,7 +72,15 @@ namespace Knapcode.MiniZip
                     {
                         throw new MiniZipException(Strings.InvalidContentRangeHeader);
                     }
-                    
+
+                    if (response.Content.Headers.ContentRange.Length != _length)
+                    {
+                        throw new MiniZipException(string.Format(
+                            Strings.LengthOfHttpContentChanged,
+                            response.Content.Headers.ContentRange.Length,
+                            _length));
+                    }
+
                     using (var stream = await response.Content.ReadAsStreamAsync())
                     {
                         return await stream.ReadToEndAsync(dst, dstOffset, count);

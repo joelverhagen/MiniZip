@@ -39,7 +39,7 @@ namespace Knapcode.MiniZip
 
                 _outputBuffer = new byte[_content.Length];
 
-                _target = new HttpRangeReader(_client, _requestUri);
+                _target = new HttpRangeReader(_client, _requestUri, _content.Length, etag: null);
             }
 
             [Fact]

@@ -20,19 +20,16 @@ namespace Knapcode.MiniZip
             using (var server = TestUtility.GetTestServer(TestUtility.TestDataDirectory))
             using (var client = server.CreateClient())
             {
-                var requestUri = new Uri(new Uri(server.BaseAddress, TestUtility.TestServerDirectory + "/"), path);
-
-                long length;
-                using (var lengthRequest = new HttpRequestMessage(HttpMethod.Head, requestUri))
-                using (var lengthResponse = await client.SendAsync(lengthRequest))
+                var httpZipProvider = new HttpZipProvider(client)
                 {
-                    lengthResponse.EnsureSuccessStatusCode();
-                    length = lengthResponse.Content.Headers.ContentLength.Value;
-                }
+                    ETagBehavior = ETagBehavior.Required,
+                    FirstBufferSize = 1,
+                    SecondBufferSize = 1,
+                    BufferGrowthExponent = 2,
+                };
 
-                var httpRangeReader = new HttpRangeReader(client, requestUri);
-                var bufferSizeProvider = new ZipBufferSizeProvider(firstBufferSize: 1, secondBufferSize: 1, exponent: 2);
-                using (var bufferedRangeStream = new BufferedRangeStream(httpRangeReader, length, bufferSizeProvider))
+                var requestUri = new Uri(new Uri(server.BaseAddress, TestUtility.TestServerDirectory + "/"), path);
+                using (var bufferedRangeStream = await httpZipProvider.GetStreamAsync(requestUri))
                 {
                     // Act
                     var a = await TestUtility.ReadWithMiniZipAsync(memoryStream);

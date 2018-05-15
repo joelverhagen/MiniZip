@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -38,11 +39,16 @@ namespace Knapcode.MiniZip
         public int BufferGrowthExponent { get; set; } = 2;
 
         /// <summary>
-        /// Initialize the ZIP directory reader for the provided request URL.
+        /// How to use ETags found on the ZIP endpoint.
+        /// </summary>
+        public ETagBehavior ETagBehavior { get; set; } = ETagBehavior.UseIfPresent;
+
+        /// <summary>
+        /// Initialize the buffered range reader stream provided request URL.
         /// </summary>
         /// <param name="requestUri">The request URL.</param>
-        /// <returns>The ZIP directory reader.</returns>
-        public async Task<ZipDirectoryReader> GetReaderAsync(Uri requestUri)
+        /// <returns>The buffered range reader stream.</returns>
+        public async Task<Stream> GetStreamAsync(Uri requestUri)
         {
             // Determine if the exists endpoint's length and whether it supports range requests.
             using (var request = new HttpRequestMessage(HttpMethod.Head, requestUri))
@@ -50,15 +56,16 @@ namespace Knapcode.MiniZip
             {
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new MiniZipException(Strings.UnsuccessfulHttpStatusCodeWhenGettingLength);
+                    throw new MiniZipException(string.Format(
+                        Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
+                        (int)response.StatusCode,
+                        response.ReasonPhrase));
                 }
 
                 if (response.Content?.Headers?.ContentLength == null)
                 {
                     throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
                 }
-
-                var length = response.Content.Headers.ContentLength.Value;
 
                 if (response.Headers.AcceptRanges == null
                     || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit))
@@ -68,13 +75,42 @@ namespace Knapcode.MiniZip
                         HttpConstants.BytesUnit));
                 }
 
-                var httpRangeReader = new HttpRangeReader(_httpClient, requestUri);
+                var length = response.Content.Headers.ContentLength.Value;
+
+                var etagBehavior = ETagBehavior;
+                var etag = response.Headers?.ETag;
+                if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
+                {
+                    etag = null;
+                }
+
+                if (etag == null && etagBehavior == ETagBehavior.Required)
+                {
+                    throw new MiniZipException(string.Format(
+                        Strings.MissingETagHeader,
+                        nameof(MiniZip.ETagBehavior),
+                        nameof(ETagBehavior.Required)));
+                }
+
+                var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, length, etag);
                 var bufferSizeProvider = new ZipBufferSizeProvider(FirstBufferSize, SecondBufferSize, BufferGrowthExponent);
                 var stream = new BufferedRangeStream(httpRangeReader, length, bufferSizeProvider);
-                var reader = new ZipDirectoryReader(stream);
 
-                return reader;
+                return stream;
             }
+        }
+
+        /// <summary>
+        /// Initialize the ZIP directory reader for the provided request URL.
+        /// </summary>
+        /// <param name="requestUri">The request URL.</param>
+        /// <returns>The ZIP directory reader.</returns>
+        public async Task<ZipDirectoryReader> GetReaderAsync(Uri requestUri)
+        {
+            var stream = await GetStreamAsync(requestUri);
+            var reader = new ZipDirectoryReader(stream);
+
+            return reader;
         }
     }
 }

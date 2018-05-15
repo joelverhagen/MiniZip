@@ -82,12 +82,29 @@ namespace Knapcode.MiniZip
             return new MemoryStream(File.ReadAllBytes(fullPath));
         }
 
-        public static TestServer GetTestServer(string directory)
+        public static TestServer GetTestServer(
+            string directory,
+            bool etags = true,
+            Func<HttpContext, Func<Task>, Task> middleware = null)
         {
             return new TestServer(new WebHostBuilder().Configure(app =>
             {
-                app.UseStaticFiles();
-                app.UseStaticFiles(new StaticFileOptions()
+                if (middleware != null)
+                {
+                    app.Use(middleware);
+                }
+
+                app.Use(async (context, next) =>
+                {
+                    await next.Invoke();
+
+                    if (!etags)
+                    {
+                        context.Response.Headers.Remove("ETag");
+                    }
+                });
+
+                app.UseStaticFiles(new StaticFileOptions
                 {
                     FileProvider = new PhysicalFileProvider(directory),
                     RequestPath = new PathString("/" + TestServerDirectory),
