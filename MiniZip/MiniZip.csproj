@@ -7,11 +7,22 @@
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <Version>0.7.0</Version>
     <Authors>Joel Verhagen</Authors>
-    <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/joelverhagen/BlobDelta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Strings.Designer.cs">
