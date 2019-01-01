@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
@@ -51,53 +52,58 @@ namespace Knapcode.MiniZip
         public async Task<Stream> GetStreamAsync(Uri requestUri)
         {
             // Determine if the exists endpoint's length and whether it supports range requests.
-            using (var request = new HttpRequestMessage(HttpMethod.Head, requestUri))
-            using (var response = await _httpClient.SendAsync(request))
+            var info = await RetryHelper.RetryAsync(async () =>
             {
-                if (!response.IsSuccessStatusCode)
+                using (var request = new HttpRequestMessage(HttpMethod.Head, requestUri))
+                using (var response = await _httpClient.SendAsync(request))
                 {
-                    throw new MiniZipException(string.Format(
-                        Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
-                        (int)response.StatusCode,
-                        response.ReasonPhrase));
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new MiniZipHttpStatusCodeException(string.Format(
+                            Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
+                            (int)response.StatusCode,
+                            response.ReasonPhrase));
+                    }
+
+                    if (response.Content?.Headers?.ContentLength == null)
+                    {
+                        throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
+                    }
+
+                    if (response.Headers.AcceptRanges == null
+                        || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit))
+                    {
+                        throw new MiniZipException(string.Format(
+                            Strings.AcceptRangesBytesValueNotFoundFormat,
+                            HttpConstants.BytesUnit));
+                    }
+
+                    var length = response.Content.Headers.ContentLength.Value;
+
+                    var etagBehavior = ETagBehavior;
+                    var etag = response.Headers?.ETag;
+                    if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
+                    {
+                        etag = null;
+                    }
+
+                    if (etag == null && etagBehavior == ETagBehavior.Required)
+                    {
+                        throw new MiniZipException(string.Format(
+                            Strings.MissingETagHeader,
+                            nameof(MiniZip.ETagBehavior),
+                            nameof(ETagBehavior.Required)));
+                    }
+
+                    return new { Length = length, ETag = etag };
                 }
+            });
 
-                if (response.Content?.Headers?.ContentLength == null)
-                {
-                    throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
-                }
+            var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, info.Length, info.ETag);
+            var bufferSizeProvider = new ZipBufferSizeProvider(FirstBufferSize, SecondBufferSize, BufferGrowthExponent);
+            var stream = new BufferedRangeStream(httpRangeReader, info.Length, bufferSizeProvider);
 
-                if (response.Headers.AcceptRanges == null
-                    || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit))
-                {
-                    throw new MiniZipException(string.Format(
-                        Strings.AcceptRangesBytesValueNotFoundFormat,
-                        HttpConstants.BytesUnit));
-                }
-
-                var length = response.Content.Headers.ContentLength.Value;
-
-                var etagBehavior = ETagBehavior;
-                var etag = response.Headers?.ETag;
-                if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
-                {
-                    etag = null;
-                }
-
-                if (etag == null && etagBehavior == ETagBehavior.Required)
-                {
-                    throw new MiniZipException(string.Format(
-                        Strings.MissingETagHeader,
-                        nameof(MiniZip.ETagBehavior),
-                        nameof(ETagBehavior.Required)));
-                }
-
-                var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, length, etag);
-                var bufferSizeProvider = new ZipBufferSizeProvider(FirstBufferSize, SecondBufferSize, BufferGrowthExponent);
-                var stream = new BufferedRangeStream(httpRangeReader, length, bufferSizeProvider);
-
-                return stream;
-            }
+            return stream;
         }
 
         /// <summary>

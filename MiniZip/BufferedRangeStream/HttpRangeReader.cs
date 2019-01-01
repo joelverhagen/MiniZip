@@ -41,52 +41,55 @@ namespace Knapcode.MiniZip
         /// <returns>The number of bytes read.</returns>
         public async Task<int> ReadAsync(long srcOffset, byte[] dst, int dstOffset, int count)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, _requestUri))
+            return await RetryHelper.RetryAsync(async () =>
             {
-                request.Headers.Range = new RangeHeaderValue(srcOffset, (srcOffset + count) - 1);
-
-                if (_etag != null)
+                using (var request = new HttpRequestMessage(HttpMethod.Get, _requestUri))
                 {
-                    request.Headers.IfMatch.Add(_etag);
+                    request.Headers.Range = new RangeHeaderValue(srcOffset, (srcOffset + count) - 1);
+
+                    if (_etag != null)
+                    {
+                        request.Headers.IfMatch.Add(_etag);
+                    }
+
+                    using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        if (response.StatusCode != HttpStatusCode.PartialContent)
+                        {
+                            throw new MiniZipHttpStatusCodeException(string.Format(
+                                Strings.NonPartialContentHttpResponse,
+                                (int)response.StatusCode,
+                                response.ReasonPhrase));
+                        }
+
+                        if (response.Content.Headers.ContentRange == null)
+                        {
+                            throw new MiniZipException(Strings.ContentRangeHeaderNotFound);
+                        }
+
+                        if (!response.Content.Headers.ContentRange.HasRange
+                            || response.Content.Headers.ContentRange.Unit != HttpConstants.BytesUnit
+                            || response.Content.Headers.ContentRange.From != srcOffset
+                            || response.Content.Headers.ContentRange.To != (srcOffset + count) - 1)
+                        {
+                            throw new MiniZipException(Strings.InvalidContentRangeHeader);
+                        }
+
+                        if (response.Content.Headers.ContentRange.Length != _length)
+                        {
+                            throw new MiniZipException(string.Format(
+                                Strings.LengthOfHttpContentChanged,
+                                response.Content.Headers.ContentRange.Length,
+                                _length));
+                        }
+
+                        using (var stream = await response.Content.ReadAsStreamAsync())
+                        {
+                            return await stream.ReadToEndAsync(dst, dstOffset, count);
+                        }
+                    }
                 }
-
-                using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
-                {
-                    if (response.StatusCode != HttpStatusCode.PartialContent)
-                    {
-                        throw new MiniZipException(string.Format(
-                            Strings.NonPartialContentHttpResponse,
-                            (int)response.StatusCode,
-                            response.ReasonPhrase));
-                    }
-
-                    if (response.Content.Headers.ContentRange == null)
-                    {
-                        throw new MiniZipException(Strings.ContentRangeHeaderNotFound);
-                    }
-
-                    if (!response.Content.Headers.ContentRange.HasRange
-                        || response.Content.Headers.ContentRange.Unit != HttpConstants.BytesUnit
-                        || response.Content.Headers.ContentRange.From != srcOffset
-                        || response.Content.Headers.ContentRange.To != (srcOffset + count) - 1)
-                    {
-                        throw new MiniZipException(Strings.InvalidContentRangeHeader);
-                    }
-
-                    if (response.Content.Headers.ContentRange.Length != _length)
-                    {
-                        throw new MiniZipException(string.Format(
-                            Strings.LengthOfHttpContentChanged,
-                            response.Content.Headers.ContentRange.Length,
-                            _length));
-                    }
-
-                    using (var stream = await response.Content.ReadAsStreamAsync())
-                    {
-                        return await stream.ReadToEndAsync(dst, dstOffset, count);
-                    }
-                }
-            }
+            });
         }
     }
 }

@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="build">
+﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="build">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <Authors>Joel Verhagen</Authors>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/joelverhagen/MiniZip/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>

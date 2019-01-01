@@ -28,7 +28,7 @@ namespace Knapcode.MiniZip
             [Fact]
             public async Task ThrowsWhenRecievingNonSuccessStatusCode()
             {
-                var exception = await Assert.ThrowsAsync<MiniZipException>(
+                var exception = await Assert.ThrowsAsync<MiniZipHttpStatusCodeException>(
                     () => _target.GetReaderAsync(_requestUri));
                 Assert.Equal(
                     "The HTTP response did not have a success status code while trying to determine the content length. The response was 404 Not Found.",
@@ -185,7 +185,7 @@ namespace Knapcode.MiniZip
                         }
                         else
                         {
-                            var ex = await Assert.ThrowsAsync<MiniZipException>(() => reader.ReadAsync());
+                            var ex = await Assert.ThrowsAsync<MiniZipHttpStatusCodeException>(() => reader.ReadAsync());
                             Assert.Equal(
                                 "The HTTP response did not have the expected status code HTTP 206 Partial Content. The response was 412 Precondition Failed.",
                                 ex.Message);
