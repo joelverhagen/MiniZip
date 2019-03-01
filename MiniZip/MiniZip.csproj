@@ -5,7 +5,7 @@
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <Version>0.7.0</Version>
+    <Version>0.8.0</Version>
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
