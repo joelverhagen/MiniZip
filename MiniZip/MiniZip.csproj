@@ -9,7 +9,7 @@
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/joelverhagen/BlobDelta</RepositoryUrl>
+    <RepositoryUrl>https://github.com/joelverhagen/MiniZip</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
