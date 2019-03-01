@@ -172,12 +172,6 @@ namespace Knapcode.MiniZip
                     Assert.Equal(knownException.Message, miniZip.Exception.Message);
                     Assert.True(sharpZipLib.Success);
                 }
-                else if (CasesNotHandledBySharpZipLib.TryGetValue(path, out knownException))
-                {
-                    Assert.Equal(knownException.Type, sharpZipLib.Exception.GetType());
-                    Assert.Equal(knownException.Message, sharpZipLib.Exception.Message);
-                    Assert.True(miniZip.Success);
-                }
                 else
                 {
                     Assert.Equal(sharpZipLib.Success, miniZip.Success);
@@ -280,18 +274,6 @@ namespace Knapcode.MiniZip
             {
                 @"Custom\Spanning.zip",
                 KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
-            },
-        };
-
-        private static IReadOnlyDictionary<string, KnownException> CasesNotHandledBySharpZipLib = new Dictionary<string, KnownException>
-        {
-            {
-                @"System.IO.Compression\compat\NullCharFileName_FromUnix.zip",
-                KnownException.Create<ArgumentException>("Illegal characters in path.\r\nParameter name: path")
-            },
-            {
-                @"System.IO.Compression\compat\NullCharFileName_FromWindows.zip",
-                KnownException.Create<ArgumentException>("Illegal characters in path.\r\nParameter name: path")
             },
         };
 
