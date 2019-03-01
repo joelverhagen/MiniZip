@@ -56,10 +56,13 @@ namespace Knapcode.MiniZip
                     {
                         if (response.StatusCode != HttpStatusCode.PartialContent)
                         {
-                            throw new MiniZipHttpStatusCodeException(string.Format(
-                                Strings.NonPartialContentHttpResponse,
-                                (int)response.StatusCode,
-                                response.ReasonPhrase));
+                            throw new MiniZipHttpStatusCodeException(
+                                string.Format(
+                                    Strings.NonPartialContentHttpResponse,
+                                    (int)response.StatusCode,
+                                    response.ReasonPhrase),
+                                response.StatusCode,
+                                response.ReasonPhrase);
                         }
 
                         if (response.Content.Headers.ContentRange == null)

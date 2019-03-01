@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
@@ -59,10 +58,13 @@ namespace Knapcode.MiniZip
                 {
                     if (!response.IsSuccessStatusCode)
                     {
-                        throw new MiniZipHttpStatusCodeException(string.Format(
-                            Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
-                            (int)response.StatusCode,
-                            response.ReasonPhrase));
+                        throw new MiniZipHttpStatusCodeException(
+                            string.Format(
+                                Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
+                                (int)response.StatusCode,
+                                response.ReasonPhrase),
+                            response.StatusCode,
+                            response.ReasonPhrase);
                     }
 
                     if (response.Content?.Headers?.ContentLength == null)
