@@ -172,10 +172,11 @@ namespace Knapcode.MiniZip
                     Assert.Equal(knownException.Message, miniZip.Exception.Message);
                     Assert.True(sharpZipLib.Success);
                 }
-                else if (CasesNotHandledBySharpZipLib.TryGetValue(path, out knownException))
+                else if (CasesNotHandledBySharpZipLib.Contains(path))
                 {
                     // This behavior seems to vary based on the version of .NET Framework or something.
-                    // Make no assertions.
+                    // Make no assertions. 
+                    Assert.True(miniZip.Success);
                 }
                 else
                 {
