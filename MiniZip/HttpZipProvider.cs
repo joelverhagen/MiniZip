@@ -44,6 +44,18 @@ namespace Knapcode.MiniZip
         public ETagBehavior ETagBehavior { get; set; } = ETagBehavior.UseIfPresent;
 
         /// <summary>
+        /// Require the ZIP endpoint does not have the <c>Accept-Ranges: bytes</c> response header. If this setting is
+        /// set to true and the expected response header is not found, an exception will be thrown.
+        /// </summary>
+        public bool RequireAcceptRanges { get; set; } = true;
+
+        /// <summary>
+        /// Whether or not to send the <c>x-ms-version: 2013-08-15</c> request header. This version or greater is
+        /// required for Azure Blob Storage to return the <c>Accept-Ranges: bytes</c> response header.
+        /// </summary>
+        public bool SendXMsVersionHeader { get; set; } = true;
+
+        /// <summary>
         /// Initialize the buffered range reader stream provided request URL.
         /// </summary>
         /// <param name="requestUri">The request URL.</param>
@@ -54,50 +66,58 @@ namespace Knapcode.MiniZip
             var info = await RetryHelper.RetryAsync(async () =>
             {
                 using (var request = new HttpRequestMessage(HttpMethod.Head, requestUri))
-                using (var response = await _httpClient.SendAsync(request))
                 {
-                    if (!response.IsSuccessStatusCode)
+                    if (SendXMsVersionHeader)
                     {
-                        throw new MiniZipHttpStatusCodeException(
-                            string.Format(
-                                Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
-                                (int)response.StatusCode,
-                                response.ReasonPhrase),
-                            response.StatusCode,
-                            response.ReasonPhrase);
+                        request.Headers.TryAddWithoutValidation("x-ms-version", "2013-08-15");
                     }
 
-                    if (response.Content?.Headers?.ContentLength == null)
+                    using (var response = await _httpClient.SendAsync(request))
                     {
-                        throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new MiniZipHttpStatusCodeException(
+                                string.Format(
+                                    Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
+                                    (int)response.StatusCode,
+                                    response.ReasonPhrase),
+                                response.StatusCode,
+                                response.ReasonPhrase);
+                        }
+
+                        if (response.Content?.Headers?.ContentLength == null)
+                        {
+                            throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
+                        }
+
+                        if (RequireAcceptRanges
+                            && (response.Headers.AcceptRanges == null
+                                || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit)))
+                        {
+                            throw new MiniZipException(string.Format(
+                                Strings.AcceptRangesBytesValueNotFoundFormat,
+                                HttpConstants.BytesUnit));
+                        }
+
+                        var length = response.Content.Headers.ContentLength.Value;
+
+                        var etagBehavior = ETagBehavior;
+                        var etag = response.Headers?.ETag;
+                        if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
+                        {
+                            etag = null;
+                        }
+
+                        if (etag == null && etagBehavior == ETagBehavior.Required)
+                        {
+                            throw new MiniZipException(string.Format(
+                                Strings.MissingETagHeader,
+                                nameof(MiniZip.ETagBehavior),
+                                nameof(ETagBehavior.Required)));
+                        }
+
+                        return new { Length = length, ETag = etag };
                     }
-
-                    if (response.Headers.AcceptRanges == null
-                        || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit))
-                    {
-                        throw new MiniZipException(string.Format(
-                            Strings.AcceptRangesBytesValueNotFoundFormat,
-                            HttpConstants.BytesUnit));
-                    }
-
-                    var length = response.Content.Headers.ContentLength.Value;
-
-                    var etagBehavior = ETagBehavior;
-                    var etag = response.Headers?.ETag;
-                    if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
-                    {
-                        etag = null;
-                    }
-
-                    if (etag == null && etagBehavior == ETagBehavior.Required)
-                    {
-                        throw new MiniZipException(string.Format(
-                            Strings.MissingETagHeader,
-                            nameof(MiniZip.ETagBehavior),
-                            nameof(ETagBehavior.Required)));
-                    }
-
-                    return new { Length = length, ETag = etag };
                 }
             });
 

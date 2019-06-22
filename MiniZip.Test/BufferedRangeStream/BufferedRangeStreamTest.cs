@@ -76,7 +76,7 @@ namespace Knapcode.MiniZip
                 // Arrange
                 await _target.ReadAsync(_outputBuffer, 0, 5);
                 _target.Position = 73;
-                _rangeReader.ResetCalls();
+                _rangeReader.Invocations.Clear();
 
                 // Act
                 _read = await _target.ReadAsync(_outputBuffer, 0, 5);
@@ -93,7 +93,7 @@ namespace Knapcode.MiniZip
                 // Arrange
                 await _target.ReadAsync(_outputBuffer, 0, 5);
                 _target.Position = 70;
-                _rangeReader.ResetCalls();
+                _rangeReader.Invocations.Clear();
 
                 // Act
                 _read = await _target.ReadAsync(_outputBuffer, 0, 5);
@@ -110,7 +110,7 @@ namespace Knapcode.MiniZip
                 // Arrange
                 await _target.ReadAsync(_outputBuffer, 0, 5);
                 _target.Position = 65;
-                _rangeReader.ResetCalls();
+                _rangeReader.Invocations.Clear();
 
                 // Act
                 _read = await _target.ReadAsync(_outputBuffer, 0, 5);
@@ -231,7 +231,7 @@ namespace Knapcode.MiniZip
                 // Arrange
                 await _target.ReadAsync(_extraBuffer, 0, 5);
                 _target.Position = 85 + delta;
-                _rangeReader.ResetCalls();
+                _rangeReader.Invocations.Clear();
 
                 // Act
                 _read = await _target.ReadAsync(_outputBuffer, 0, 5);
@@ -283,7 +283,7 @@ namespace Knapcode.MiniZip
                 Assert.Equal(size, read);
                 Assert.Equal(GetBytes(position, size), bufferCopy);
 
-                _rangeReader.ResetCalls();
+                _rangeReader.Invocations.Clear();
                 _rangeReader.Verify(
                     x => x.ReadAsync(It.IsAny<long>(), It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()),
                     Times.Never);
