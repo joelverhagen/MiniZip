@@ -1,10 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
 using Xunit;
 
 namespace Knapcode.MiniZip
@@ -19,14 +15,7 @@ namespace Knapcode.MiniZip
         {
             using (var testDirectory = TestDirectory.Create())
             {
-                // Discover the .nupkg URL.
-                var sourceRepository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-                var serviceIndex = await sourceRepository.GetResourceAsync<ServiceIndexResourceV3>();
-                var packageBaseAddress = serviceIndex.GetServiceEntryUri(ServiceTypes.PackageBaseAddress);
-
-                var lowerId = id.ToLowerInvariant();
-                var lowerVersion = NuGetVersion.Parse(version).ToNormalizedString().ToLowerInvariant();
-                var packageUri = new Uri(packageBaseAddress, $"{lowerId}/{lowerVersion}/{lowerId}.{lowerVersion}.nupkg");
+                var packageUri = await NuGetUtility.GetNupkgUrlAsync(id, version);
 
                 ZipDirectory zipDirectoryA;
                 string mzipPath;
@@ -39,7 +28,7 @@ namespace Knapcode.MiniZip
                         zipDirectoryA = await reader.ReadAsync();
 
                         // Save the .mzip to the test directory.
-                        mzipPath = Path.Combine(testDirectory, $"{lowerId}.{lowerVersion}.mzip");
+                        mzipPath = Path.Combine(testDirectory, $"{id}.{version}.mzip");
                         using (var fileStream = new FileStream(mzipPath, FileMode.Create))
                         {
                             var mzipFormat = new MZipFormat();

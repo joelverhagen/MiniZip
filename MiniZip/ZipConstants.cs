@@ -84,9 +84,14 @@
         public const ushort MaximumZip64LocalFileDataFieldSize = 16;
 
         /// <summary>
-        /// The size of the Zip64 locator record, excluding the <see cref="Zip64EndOfCentralDirectoryLocatorSignature"/>.
+        /// The size of the Zip64 end of central directory locator.
         /// </summary>
-        public const int Zip64EndOfCentralDirectoryLocatorSizeWithoutSignature = 20 - sizeof(uint);
+        public const int Zip64EndOfCentralDirectoryLocatorSize = 20;
+
+        /// <summary>
+        /// The size of the Zip64 end of central directory locator.
+        /// </summary>
+        public const int Zip64EndOfCentralDirectoryLocatorSizeWithoutSignature = Zip64EndOfCentralDirectoryLocatorSize - sizeof(uint);
 
         /// <summary>
         /// The size of the Zip64 end of central record, excluding the <see cref="Zip64EndOfCentralDirectorySignature"/>
@@ -98,6 +103,6 @@
         /// The size of the central directory entry header, excluding the <see cref="CentralDirectoryEntryHeaderSignature"/>
         /// and variable fields.
         /// </summary>
-        internal static int CentralDirectoryEntryHeaderSizeWithoutSignature = 46 - sizeof(uint);
+        public static int CentralDirectoryEntryHeaderSizeWithoutSignature = 46 - sizeof(uint);
     }
 }

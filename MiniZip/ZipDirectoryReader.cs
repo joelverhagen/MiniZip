@@ -25,10 +25,12 @@ namespace Knapcode.MiniZip
             ZipConstants.Zip64EndOfCentralDirectorySizeWithoutSignature,
             ZipConstants.CentralDirectoryEntryHeaderSizeWithoutSignature,
             sizeof(uint),
+            4096,
         }.Max();
 
         private Stream _stream;
         private readonly byte[] _buffer;
+        private readonly long _minimumPosition;
         private readonly bool _leaveOpen;
         private int _disposed;
 
@@ -51,6 +53,7 @@ namespace Knapcode.MiniZip
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
             _buffer = new byte[BufferSize];
+            _minimumPosition = (stream as VirtualOffsetStream)?.VirtualOffset ?? 0;
             _leaveOpen = leaveOpen;
             _disposed = 0;
 
@@ -253,11 +256,14 @@ namespace Knapcode.MiniZip
 
             var zip = new ZipDirectory();
 
+            var lazyBuffer = new Lazy<byte[]>(() => new byte[0xffff]);
+
             zip.OffsetAfterEndOfCentralDirectory = await LocateBlockWithSignatureAsync(
                 ZipConstants.EndOfCentralDirectorySignature,
                 _stream.Length,
                 ZipConstants.EndOfCentralDirectorySize,
-                0xffff);
+                0xffff,
+                lazyBuffer);
 
             if (zip.OffsetAfterEndOfCentralDirectory < 0)
             {
@@ -295,9 +301,10 @@ namespace Knapcode.MiniZip
 
                 zip.Zip64.OffsetAfterEndOfCentralDirectoryLocator = await LocateBlockWithSignatureAsync(
                     ZipConstants.Zip64EndOfCentralDirectoryLocatorSignature,
-                    zip.OffsetAfterEndOfCentralDirectory,
-                    0,
-                    0x1000);
+                    zip.OffsetAfterEndOfCentralDirectory - sizeof(uint),
+                    ZipConstants.Zip64EndOfCentralDirectoryLocatorSize,
+                    0x1000,
+                    lazyBuffer);
 
                 if (zip.Zip64.OffsetAfterEndOfCentralDirectoryLocator < 0)
                 {
@@ -363,7 +370,7 @@ namespace Knapcode.MiniZip
                 throw new MiniZipException(Strings.ArchivesSpanningMultipleDisksNotSupported);
             }
 
-            _stream.Seek(offsetOfCentralDirectory, SeekOrigin.Begin);
+            Seek(offsetOfCentralDirectory);
 
             zip.Entries = new List<CentralDirectoryHeader>();
             for (ulong i = 0; i < entriesInThisDisk; i++)
@@ -525,7 +532,8 @@ namespace Knapcode.MiniZip
             uint signature,
             long endLocation,
             int minimumBlockSize,
-            int maximumVariableData)
+            int maximumVariableData,
+            Lazy<byte[]> lazyBuffer)
         {
             var pos = endLocation - minimumBlockSize;
             if (pos < 0)
@@ -533,22 +541,58 @@ namespace Knapcode.MiniZip
                 return -1;
             }
 
-            var giveUpMarker = Math.Max(pos - maximumVariableData, 0);
-
-            do
+            var giveUpMarker = Math.Max(Math.Max(pos - maximumVariableData, 0), _minimumPosition);
+            if (pos < giveUpMarker)
             {
-                if (pos < giveUpMarker)
+                return -1;
+            }
+
+            Seek(pos);
+            var candidate = await ReadUInt32Async();
+            if (signature == candidate)
+            {
+                return _stream.Position;
+            }
+
+            while (true)
+            {
+                var streamPosition = Math.Max(giveUpMarker, pos - lazyBuffer.Value.Length);
+                var readAmount = (int)(pos - streamPosition);
+                if (readAmount < 1)
                 {
                     return -1;
                 }
 
-                _stream.Seek(pos--, SeekOrigin.Begin);
-            }
-            while (await ReadUInt32Async() != signature);
+                Seek(streamPosition);
+                await _stream.ReadExactlyAsync(lazyBuffer.Value, 0, readAmount);
 
-            return _stream.Position;
+                for (var bufferPos = readAmount - 1; bufferPos >= 0; bufferPos--)
+                {
+                    pos--;
+                    candidate <<= sizeof(byte) * 8;
+                    candidate |= lazyBuffer.Value[bufferPos];
+
+                    if (signature == candidate)
+                    {
+                        Seek(pos + sizeof(uint));
+                        return _stream.Position;
+                    }
+                }
+            }
         }
-        
+
+        private void Seek(long pos)
+        {
+            if (pos < _minimumPosition)
+            {
+                throw new InvalidOperationException(
+                    $"Unable seek to position {pos} which is before the minimum position restrition " +
+                    $"{_minimumPosition}.");
+            }
+
+            _stream.Seek(pos, SeekOrigin.Begin);
+        }
+
         private async Task ReadFullyAsync(byte[] buffer)
         {
             await _stream.ReadExactlyAsync(buffer, 0, buffer.Length);
@@ -574,7 +618,7 @@ namespace Knapcode.MiniZip
 
         private async Task<uint> ReadUInt32Async()
         {
-            using (var reader = await LoadBinaryReaderAsync(_buffer, sizeof(UInt32)))
+            using (var reader = await LoadBinaryReaderAsync(_buffer, sizeof(uint)))
             {
                 return reader.ReadUInt32();
             }

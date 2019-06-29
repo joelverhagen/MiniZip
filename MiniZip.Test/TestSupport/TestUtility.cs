@@ -15,6 +15,7 @@ namespace Knapcode.MiniZip
 {
     public static class TestUtility
     {
+        private static object TestDataLock = new object();
         public static readonly string TestDataDirectory = Path.GetFullPath("TestData");
         public const string TestServerDirectory = "TestData";
 
@@ -79,7 +80,10 @@ namespace Knapcode.MiniZip
         public static MemoryStream BufferTestData(string path)
         {
             var fullPath = Path.Combine(TestDataDirectory, path);
-            return new MemoryStream(File.ReadAllBytes(fullPath));
+            lock (TestDataLock)
+            {
+                return new MemoryStream(File.ReadAllBytes(fullPath));
+            }
         }
 
         public static TestServer GetTestServer(

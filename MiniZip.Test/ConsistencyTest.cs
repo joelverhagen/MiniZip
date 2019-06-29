@@ -19,13 +19,7 @@ namespace Knapcode.MiniZip
             using (var server = TestUtility.GetTestServer(TestUtility.TestDataDirectory))
             using (var client = server.CreateClient())
             {
-                var httpZipProvider = new HttpZipProvider(client)
-                {
-                    ETagBehavior = ETagBehavior.Required,
-                    FirstBufferSize = 1,
-                    SecondBufferSize = 1,
-                    BufferGrowthExponent = 2,
-                };
+                var httpZipProvider = new HttpZipProvider(client);
 
                 var requestUri = new Uri(new Uri(server.BaseAddress, TestUtility.TestServerDirectory + "/"), path);
                 using (var bufferedRangeStream = await httpZipProvider.GetStreamAsync(requestUri))

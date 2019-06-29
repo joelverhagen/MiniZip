@@ -23,20 +23,10 @@ namespace Knapcode.MiniZip
         }
 
         /// <summary>
-        /// The first buffer size in bytes to use when reading. This defaults to 22 bytes, which is the length of the
-        /// "end of central directory" record.
+        /// The buffer size provider to use when initializing the <see cref="BufferedRangeStream"/>. If the value of
+        /// this property is set to null, <see cref="NullBufferSizeProvider"/> is used.
         /// </summary>
-        public int FirstBufferSize { get; set; } = ZipConstants.EndOfCentralDirectorySize;
-
-        /// <summary>
-        /// The second buffer size in bytes to use when reading. This defaults to 4096 bytes.
-        /// </summary>
-        public int SecondBufferSize { get; set; } = 4096;
-
-        /// <summary>
-        /// The exponent to determine the buffer growth rate. This defaults to 2.
-        /// </summary>
-        public int BufferGrowthExponent { get; set; } = 2;
+        public IBufferSizeProvider BufferSizeProvider { get; set; } = NullBufferSizeProvider.Instance;
 
         /// <summary>
         /// How to use ETags found on the ZIP endpoint.
@@ -122,7 +112,7 @@ namespace Knapcode.MiniZip
             });
 
             var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, info.Length, info.ETag);
-            var bufferSizeProvider = new ZipBufferSizeProvider(FirstBufferSize, SecondBufferSize, BufferGrowthExponent);
+            var bufferSizeProvider = BufferSizeProvider ?? NullBufferSizeProvider.Instance;
             var stream = new BufferedRangeStream(httpRangeReader, info.Length, bufferSizeProvider);
 
             return stream;

@@ -14,6 +14,16 @@ namespace Knapcode.MiniZip
         private bool _isFirst;
 
         /// <summary>
+        /// Initialize an instance of the ZIP buffer provider with default settings. The first buffer size will be
+        /// <see cref="ZipConstants.EndOfCentralDirectorySize"/> bytes and the second will be 4096 bytes. The growth
+        /// exponent is 2, meaning buffer will double from it's previous value each time.
+        /// </summary>
+        public ZipBufferSizeProvider()
+            : this(firstBufferSize: ZipConstants.EndOfCentralDirectorySize, secondBufferSize: 4096, exponent: 2)
+        {
+        }
+
+        /// <summary>
         /// Initializes an instance of the ZIP buffer provider.
         /// </summary>
         /// <param name="firstBufferSize">The first buffer size to use.</param>
