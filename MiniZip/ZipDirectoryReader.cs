@@ -318,7 +318,7 @@ namespace Knapcode.MiniZip
                     zip.Zip64.TotalNumberOfDisks = buffer.ReadUInt32();
                 }
 
-                _stream.Position = (long)zip.Zip64.EndOfCentralDirectoryOffset;
+                Seek((long)zip.Zip64.EndOfCentralDirectoryOffset);
 
                 if (await ReadUInt32Async() != ZipConstants.Zip64EndOfCentralDirectorySignature)
                 {
