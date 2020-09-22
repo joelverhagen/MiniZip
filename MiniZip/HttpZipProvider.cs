@@ -34,7 +34,7 @@ namespace Knapcode.MiniZip
         public ETagBehavior ETagBehavior { get; set; } = ETagBehavior.UseIfPresent;
 
         /// <summary>
-        /// Require the ZIP endpoint does not have the <c>Accept-Ranges: bytes</c> response header. If this setting is
+        /// Require the ZIP endpoint to have the <c>Accept-Ranges: bytes</c> response header. If this setting is
         /// set to true and the expected response header is not found, an exception will be thrown.
         /// </summary>
         public bool RequireAcceptRanges { get; set; } = true;
@@ -44,6 +44,12 @@ namespace Knapcode.MiniZip
         /// required for Azure Blob Storage to return the <c>Accept-Ranges: bytes</c> response header.
         /// </summary>
         public bool SendXMsVersionHeader { get; set; } = true;
+
+        /// <summary>
+        /// Require the ZIP endpoint to have the <c>Content-Range</c> response header when performing range requests.
+        /// If this setting is set to true and the expected response header is not found, an exception will be thrown.
+        /// </summary>
+        public bool RequireContentRange { get; set; } = true;
 
         /// <summary>
         /// Initialize the buffered range reader stream provided request URL.
@@ -111,7 +117,7 @@ namespace Knapcode.MiniZip
                 }
             });
 
-            var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, info.Length, info.ETag);
+            var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, info.Length, info.ETag, RequireContentRange);
             var bufferSizeProvider = BufferSizeProvider ?? NullBufferSizeProvider.Instance;
             var stream = new BufferedRangeStream(httpRangeReader, info.Length, bufferSizeProvider);
 
