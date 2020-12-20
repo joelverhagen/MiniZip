@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ namespace Knapcode.MiniZip
     {
         public static void Main(string[] args)
         {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+
             LargeAsync().GetAwaiter().GetResult();
         }
 
