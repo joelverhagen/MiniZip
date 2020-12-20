@@ -2,7 +2,7 @@
 
 Read the file listing of a .zip archive without downloading the whole thing.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/d123gosp49t5sh05/branch/master?svg=true)](https://ci.appveyor.com/project/joelverhagen/minizip/branch/master)
+[![Build](https://github.com/joelverhagen/MiniZip/workflows/Build/badge.svg)](https://github.com/joelverhagen/MiniZip/actions?query=workflow%3ABuild)
 
 ## Introduction
 
