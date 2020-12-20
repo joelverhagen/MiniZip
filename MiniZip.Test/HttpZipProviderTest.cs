@@ -103,7 +103,7 @@ namespace Knapcode.MiniZip
                     var actual = await reader.ReadAsync();
                     var expected = await TestUtility.ReadWithMiniZipAsync(TestUtility.BufferTestData(fileName));
                     TestUtility.VerifyJsonEquals(expected.Data, actual);
-                } 
+                }
             }
 
             [Fact]
@@ -141,6 +141,26 @@ namespace Knapcode.MiniZip
                     // Act & Assert
                     var ex = await Assert.ThrowsAsync<MiniZipException>(() => target.GetReaderAsync(requestUri));
                     Assert.Equal("An ETag header is required when using ETagBehavior.Required.", ex.Message);
+                }
+            }
+
+            [Fact]
+            public async Task ReturnsHeadersAsProperties()
+            {
+                // Arrange
+                var fileName = "System.IO.Compression/refzipfiles/normal.zip";
+                using (var server = TestUtility.GetTestServer(TestUtility.TestDataDirectory))
+                using (var client = server.CreateClient())
+                {
+                    var requestUri = new Uri(new Uri(server.BaseAddress, TestUtility.TestServerDirectory + "/"), fileName);
+                    var target = new HttpZipProvider(client);
+
+                    // Act
+                    var reader = await target.GetReaderAsync(requestUri);
+
+                    // Assert
+                    Assert.Equal("2671162", Assert.Single(reader.Properties["Content-Length"]));
+                    Assert.Equal("application/x-zip-compressed", Assert.Single(reader.Properties["Content-Type"]));
                 }
             }
 

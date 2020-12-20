@@ -37,7 +37,7 @@ namespace Knapcode.MiniZip
             _server?.Dispose();
         }
 
-        [Fact]
+        [Fact(Skip = "WIP")]
         public async Task Run()
         {
             var name1 = "CloudBlockBlob and ZipArchive";

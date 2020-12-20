@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -58,6 +60,23 @@ namespace Knapcode.MiniZip
         /// <returns>The buffered range reader stream.</returns>
         public async Task<Stream> GetStreamAsync(Uri requestUri)
         {
+            var tuple = await GetStreamAndHeadersAsync(requestUri);
+            return tuple.Item1;
+        }
+
+        /// <summary>
+        /// Initialize the ZIP directory reader for the provided request URL.
+        /// </summary>
+        /// <param name="requestUri">The request URL.</param>
+        /// <returns>The ZIP directory reader.</returns>
+        public async Task<ZipDirectoryReader> GetReaderAsync(Uri requestUri)
+        {
+            var tuple = await GetStreamAndHeadersAsync(requestUri);
+            return new ZipDirectoryReader(tuple.Item1, leaveOpen: false, tuple.Item2);
+        }
+
+        private async Task<Tuple<Stream, ILookup<string, string>>> GetStreamAndHeadersAsync(Uri requestUri)
+        {
             // Determine if the exists endpoint's length and whether it supports range requests.
             var info = await RetryHelper.RetryAsync(async () =>
             {
@@ -112,7 +131,13 @@ namespace Knapcode.MiniZip
                                 nameof(ETagBehavior.Required)));
                         }
 
-                        return new { Length = length, ETag = etag };
+                        var headers = Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>()
+                            .Concat(response.Headers)
+                            .Concat(response.Content.Headers)
+                            .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
+                            .ToLookup(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+
+                        return new { Length = length, ETag = etag, Headers = headers };
                     }
                 }
             });
@@ -121,20 +146,7 @@ namespace Knapcode.MiniZip
             var bufferSizeProvider = BufferSizeProvider ?? NullBufferSizeProvider.Instance;
             var stream = new BufferedRangeStream(httpRangeReader, info.Length, bufferSizeProvider);
 
-            return stream;
-        }
-
-        /// <summary>
-        /// Initialize the ZIP directory reader for the provided request URL.
-        /// </summary>
-        /// <param name="requestUri">The request URL.</param>
-        /// <returns>The ZIP directory reader.</returns>
-        public async Task<ZipDirectoryReader> GetReaderAsync(Uri requestUri)
-        {
-            var stream = await GetStreamAsync(requestUri);
-            var reader = new ZipDirectoryReader(stream);
-
-            return reader;
+            return Tuple.Create<Stream, ILookup<string, string>>(stream, info.Headers);
         }
     }
 }

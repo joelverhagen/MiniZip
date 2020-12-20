@@ -18,6 +18,8 @@ namespace Knapcode.MiniZip
     /// </remarks>
     public class ZipDirectoryReader : IZipDirectoryReader
     {
+        private static readonly ILookup<string, string> EmptyProperties = Enumerable.Empty<string>().ToLookup(x => x, x => x);
+
         private static readonly int BufferSize = new[]
         {
             ZipConstants.EndOfCentralDirectorySizeWithoutSignature,
@@ -33,6 +35,7 @@ namespace Knapcode.MiniZip
         private readonly long _minimumPosition;
         private readonly bool _leaveOpen;
         private int _disposed;
+        private readonly ILookup<string, string> _properties;
 
         /// <summary>
         /// Initializes a ZIP directory reader, which reads the provided <see cref="Stream"/>. When this instance is
@@ -49,13 +52,25 @@ namespace Knapcode.MiniZip
         /// </summary>
         /// <param name="stream">The stream containing the ZIP archive.</param>
         /// <param name="leaveOpen">Whether or not to leave the stream open when this instance is disposed.</param>
-        public ZipDirectoryReader(Stream stream, bool leaveOpen)
+        public ZipDirectoryReader(Stream stream, bool leaveOpen) : this(stream, leaveOpen, EmptyProperties)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a ZIP directory reader, which reads the provided <see cref="Stream"/>. Whether or not the
+        /// provided stream is disposed when this instance is disposed is controlled by <paramref name="leaveOpen"/>.
+        /// </summary>
+        /// <param name="stream">The stream containing the ZIP archive.</param>
+        /// <param name="leaveOpen">Whether or not to leave the stream open when this instance is disposed.</param>
+        /// <param name="properties">A property bag related to the ZIP directory. For HTTP-based ZIP directories, this is the HTTP headers.</param>
+        public ZipDirectoryReader(Stream stream, bool leaveOpen, ILookup<string, string> properties)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
             _buffer = new byte[BufferSize];
             _minimumPosition = (stream as VirtualOffsetStream)?.VirtualOffset ?? 0;
             _leaveOpen = leaveOpen;
             _disposed = 0;
+            _properties = properties ?? throw new ArgumentNullException(nameof(properties));
 
             if (!stream.CanSeek)
             {
@@ -95,6 +110,11 @@ namespace Knapcode.MiniZip
         /// The stream containing the ZIP archive that is read by this instance.
         /// </summary>
         public Stream Stream => _stream;
+
+        /// <summary>
+        /// A property bag related to the ZIP directory. For HTTP-based ZIP directories, this is the HTTP headers.
+        /// </summary>
+        public ILookup<string, string> Properties => _properties;
 
         /// <summary>
         /// Reads a specific local file header given a central directory header for a file.
