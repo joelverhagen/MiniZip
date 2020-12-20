@@ -2,21 +2,13 @@
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>Knapcode.MiniZip.Sandbox</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
-    
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MiniZip\MiniZip.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="System.Net.Http" />
   </ItemGroup>
   
 </Project>
