@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Knapcode.MiniZip
@@ -17,7 +18,7 @@ namespace Knapcode.MiniZip
                     attempt++;
                     return await actAsync();
                 }
-                catch (Exception ex) when (ex is MiniZipHttpStatusCodeException || ex is IOException)
+                catch (Exception ex) when (ex is MiniZipHttpStatusCodeException || ex is IOException || ex is HttpRequestException)
                 {
                     if (attempt >= maxAttempts)
                     {

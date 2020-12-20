@@ -11,7 +11,7 @@
     <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
 
-    <Version>0.12.0</Version>
+    <Version>0.13.0</Version>
 
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
