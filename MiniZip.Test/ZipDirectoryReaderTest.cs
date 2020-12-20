@@ -266,7 +266,6 @@ namespace Knapcode.MiniZip
                 public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) => throw new NotSupportedException();
                 public override Task FlushAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
                 public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => throw new NotSupportedException();
-                public override void CopyTo(Stream destination, int bufferSize) => throw new NotSupportedException();
                 public override void EndWrite(IAsyncResult asyncResult) => throw new NotSupportedException();
                 public override void Flush() => throw new NotSupportedException();
                 public override void SetLength(long value) => throw new NotSupportedException();

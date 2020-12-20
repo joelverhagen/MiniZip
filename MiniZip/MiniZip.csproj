@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="build">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CoreOnly)' != 'true'">netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CoreOnly)' == 'true'">netstandard2.0</TargetFrameworks>
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+
     <Version>0.12.0</Version>
-    
+
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>

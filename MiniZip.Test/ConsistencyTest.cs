@@ -63,6 +63,7 @@ namespace Knapcode.MiniZip
             }
         }
 
+#if !NETFRAMEWORK
         [Theory]
         [MemberData(nameof(TestDataPaths))]
         public async Task WithBcl(string path)
@@ -282,6 +283,7 @@ namespace Knapcode.MiniZip
             @"System.IO.Compression\compat\NullCharFileName_FromUnix.zip",
             @"System.IO.Compression\compat\NullCharFileName_FromWindows.zip",
         };
+#endif
 
         public static IEnumerable<object[]> TestDataPaths => TestUtility
             .TestDataPaths

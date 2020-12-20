@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -82,7 +83,19 @@ namespace Knapcode.MiniZip
             var fullPath = Path.Combine(TestDataDirectory, path);
             lock (TestDataLock)
             {
-                return new MemoryStream(File.ReadAllBytes(fullPath));
+                var attempt = 0;
+                while (true)
+                {
+                    attempt++;
+                    try
+                    {
+                        return new MemoryStream(File.ReadAllBytes(fullPath));
+                    }
+                    catch (IOException) when (attempt <= 3)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(3));
+                    }
+                }
             }
         }
 
