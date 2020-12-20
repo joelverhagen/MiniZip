@@ -16,7 +16,7 @@ namespace Knapcode.MiniZip
             public async Task RejectsEncryptedFiles()
             {
                 // Arrange
-                using (var stream = TestUtility.BufferTestData(@"SharpZipLib\FastZipHandling.Encryption\0.zip"))
+                using (var stream = TestUtility.BufferTestData("SharpZipLib/FastZipHandling.Encryption/0.zip"))
                 {
                     var reader = new ZipDirectoryReader(stream);
                     var directory = await reader.ReadAsync();
@@ -30,8 +30,8 @@ namespace Knapcode.MiniZip
             }
 
             [Theory]
-            [InlineData(@"Custom\crc32collide_with_descriptor_and_signature.zip")]
-            [InlineData(@"System.IO.Compression\StrangeZipFiles\dataDescriptor.zip")]
+            [InlineData("Custom/crc32collide_with_descriptor_and_signature.zip")]
+            [InlineData("System.IO.Compression/StrangeZipFiles/dataDescriptor.zip")]
             public async Task ReadsDataDescriptorWithSignature(string resourceName)
             {
                 // Arrange
@@ -54,8 +54,8 @@ namespace Knapcode.MiniZip
             }
 
             [Theory]
-            [InlineData(@"Custom\crc32collide_with_descriptor_no_signature.zip")]
-            [InlineData(@"Custom\crc32collide_with_descriptor_no_signature_gap.zip")]
+            [InlineData("Custom/crc32collide_with_descriptor_no_signature.zip")]
+            [InlineData("Custom/crc32collide_with_descriptor_no_signature_gap.zip")]
             public async Task ReadsDataDescriptorWithoutSignature(string resourceName)
             {
                 // Arrange
@@ -107,7 +107,7 @@ namespace Knapcode.MiniZip
             public async Task RejectsInvalidLocalFileHeaderSignature()
             {
                 // Assert
-                using (var stream = TestUtility.BufferTestData(@"System.IO.Compression\badzipfiles\localFileHeaderSignatureWrong.zip"))
+                using (var stream = TestUtility.BufferTestData("System.IO.Compression/badzipfiles/localFileHeaderSignatureWrong.zip"))
                 {
                     var reader = new ZipDirectoryReader(stream);
                     var directory = await reader.ReadAsync();
@@ -124,7 +124,7 @@ namespace Knapcode.MiniZip
             public async Task RejectsOffsetOutOfBounds()
             {
                 // Assert
-                using (var stream = TestUtility.BufferTestData(@"System.IO.Compression\badzipfiles\localFileOffsetOutOfBounds.zip"))
+                using (var stream = TestUtility.BufferTestData("System.IO.Compression/badzipfiles/localFileOffsetOutOfBounds.zip"))
                 {
                     var reader = new ZipDirectoryReader(stream);
                     var directory = await reader.ReadAsync();
@@ -143,7 +143,7 @@ namespace Knapcode.MiniZip
             public async Task AllowsReadingTwice()
             {
                 // Arrange
-                using (var stream = TestUtility.BufferTestData(@"System.IO.Compression\refzipfiles\normal.zip"))
+                using (var stream = TestUtility.BufferTestData("System.IO.Compression/refzipfiles/normal.zip"))
                 {
                     var reader = new ZipDirectoryReader(stream);
 
@@ -161,8 +161,8 @@ namespace Knapcode.MiniZip
             public async Task CanReadFromAChangedStream()
             {
                 // Arrange
-                using (var streamA = TestUtility.BufferTestData(@"System.IO.Compression\refzipfiles\normal.zip"))
-                using (var streamB = TestUtility.BufferTestData(@"System.IO.Compression\refzipfiles\small.zip"))
+                using (var streamA = TestUtility.BufferTestData("System.IO.Compression/refzipfiles/normal.zip"))
+                using (var streamB = TestUtility.BufferTestData("System.IO.Compression/refzipfiles/small.zip"))
                 using (var sourceStream = new MemoryStream())
                 {
                     var expected = (await TestUtility.ReadWithMiniZipAsync(streamB)).Data;
@@ -185,8 +185,8 @@ namespace Knapcode.MiniZip
             }
             
             [Theory]
-            [InlineData(@"System.IO.Compression\refzipfiles\fake64.zip", 770, 942)]
-            [InlineData(@"System.IO.Compression\refzipfiles\normal.zip", 2670582, 2671162)]
+            [InlineData("System.IO.Compression/refzipfiles/fake64.zip", 770, 942)]
+            [InlineData("System.IO.Compression/refzipfiles/normal.zip", 2670582, 2671162)]
             public async Task DoesNotReadBeforeCentralDirectory(string path, long minimum, long maximum)
             {
                 // Arrange

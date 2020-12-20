@@ -27,44 +27,44 @@ namespace Knapcode.MiniZip
 
         public static IReadOnlyList<string> InvalidTestDataPaths => new[]
         {
-            @"SharpZipLib\ZipFileHandling.EmbeddedArchive\1.zip",
-            @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
-            @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
-            @"System.IO.Compression\badzipfiles\CDoffsetInBoundsWrong.zip",
-            @"System.IO.Compression\badzipfiles\CDoffsetOutOfBounds.zip",
-            @"System.IO.Compression\badzipfiles\EOCDmissing.zip",
-            @"System.IO.Compression\badzipfiles\numberOfEntriesDifferent.zip",
-            @"Custom\Spanning.z01",
-            @"Custom\Spanning.z02",
-            @"Custom\Spanning.zip",
+            "SharpZipLib/ZipFileHandling.EmbeddedArchive/1.zip",
+            "SharpZipLib/ZipFileHandling.FindEntriesInArchiveExtraData/0.zip",
+            "SharpZipLib/ZipFileHandling.Zip64Useage/1.zip",
+            "System.IO.Compression/badzipfiles/CDoffsetInBoundsWrong.zip",
+            "System.IO.Compression/badzipfiles/CDoffsetOutOfBounds.zip",
+            "System.IO.Compression/badzipfiles/EOCDmissing.zip",
+            "System.IO.Compression/badzipfiles/numberOfEntriesDifferent.zip",
+            "Custom/Spanning.z01",
+            "Custom/Spanning.z02",
+            "Custom/Spanning.zip",
         };
 
         public static IReadOnlyList<string> InvalidLocalFileHeaders => new[]
         {
             // mzip
-            @"Custom\only-metadata-zip64.zip",
-            @"Custom\only-metadata.zip",
+            "Custom/only-metadata-zip64.zip",
+            "Custom/only-metadata.zip",
 
             // encrypted
-            @"SharpZipLib\FastZipHandling.Encryption\0.zip",
-            @"SharpZipLib\FastZipHandling.NonAsciiPasswords\0.zip",
-            @"SharpZipLib\GeneralHandling.StoredNonSeekableKnownSizeNoCrcEncrypted\0.zip",
-            @"SharpZipLib\StreamHandling.StoredNonSeekableKnownSizeNoCrcEncrypted\0.zip",
-            @"SharpZipLib\ZipFileHandling.AddEncryptedEntriesToExistingArchive\0.zip",
-            @"SharpZipLib\ZipFileHandling.AddEncryptedEntriesToExistingArchive\1.zip",
-            @"SharpZipLib\ZipFileHandling.BasicEncryption\0.zip",
-            @"SharpZipLib\ZipFileHandling.BasicEncryptionToDisk\0.zip",
-            @"SharpZipLib\ZipFileHandling.Crypto_AddEncryptedEntryToExistingArchiveDirect\1.zip",
-            @"SharpZipLib\ZipFileHandling.Crypto_AddEncryptedEntryToExistingArchiveSafe\0.zip",
-            @"SharpZipLib\ZipFileHandling.TestEncryptedDirectoryEntry\0.zip",
-            @"SharpZipLib\ZipFileHandling.TestEncryptedDirectoryEntry\1.zip",
+            "SharpZipLib/FastZipHandling.Encryption/0.zip",
+            "SharpZipLib/FastZipHandling.NonAsciiPasswords/0.zip",
+            "SharpZipLib/GeneralHandling.StoredNonSeekableKnownSizeNoCrcEncrypted/0.zip",
+            "SharpZipLib/StreamHandling.StoredNonSeekableKnownSizeNoCrcEncrypted/0.zip",
+            "SharpZipLib/ZipFileHandling.AddEncryptedEntriesToExistingArchive/0.zip",
+            "SharpZipLib/ZipFileHandling.AddEncryptedEntriesToExistingArchive/1.zip",
+            "SharpZipLib/ZipFileHandling.BasicEncryption/0.zip",
+            "SharpZipLib/ZipFileHandling.BasicEncryptionToDisk/0.zip",
+            "SharpZipLib/ZipFileHandling.Crypto_AddEncryptedEntryToExistingArchiveDirect/1.zip",
+            "SharpZipLib/ZipFileHandling.Crypto_AddEncryptedEntryToExistingArchiveSafe/0.zip",
+            "SharpZipLib/ZipFileHandling.TestEncryptedDirectoryEntry/0.zip",
+            "SharpZipLib/ZipFileHandling.TestEncryptedDirectoryEntry/1.zip",
 
             // malformed
-            @"System.IO.Compression\badzipfiles\localFileHeaderSignatureWrong.zip",
-            @"System.IO.Compression\badzipfiles\localFileOffsetOutOfBounds.zip",
+            "System.IO.Compression/badzipfiles/localFileHeaderSignatureWrong.zip",
+            "System.IO.Compression/badzipfiles/localFileOffsetOutOfBounds.zip",
 
             // slow
-            @"SharpZipLib\ZipFileHandling.Zip64Entries\0.zip",
+            "SharpZipLib/ZipFileHandling.Zip64Entries/0.zip",
         };
 
         public static IReadOnlyList<string> ValidTestDataPaths => TestDataPaths
@@ -234,8 +234,7 @@ namespace Knapcode.MiniZip
 
             return Uri.UnescapeDataString(directoryUri
                 .MakeRelativeUri(pathUri)
-                .ToString()
-                .Replace('/', Path.DirectorySeparatorChar));
+                .ToString());
         }
     }
 }

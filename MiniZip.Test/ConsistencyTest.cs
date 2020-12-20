@@ -136,11 +136,11 @@ namespace Knapcode.MiniZip
         private static IReadOnlyDictionary<string, KnownException> CasesHandledByBcl = new Dictionary<string, KnownException>
         {
             {
-                @"SharpZipLib\ZipFileHandling.FindEntriesInArchiveExtraData\0.zip",
+                "SharpZipLib/ZipFileHandling.FindEntriesInArchiveExtraData/0.zip",
                 KnownException.Create<MiniZipException>("Cannot find central directory.")
             },
             {
-                @"Custom\Spanning.zip",
+                "Custom/Spanning.zip",
                 KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
             },
         };
@@ -226,7 +226,7 @@ namespace Knapcode.MiniZip
         private static IReadOnlyDictionary<string, Action<ZipDirectory>> DifferencesFromSharpZipLib = new Dictionary<string, Action<ZipDirectory>>
         {
             {
-                @"System.IO.Compression\badzipfiles\invaliddate.zip",
+                "System.IO.Compression/badzipfiles/invaliddate.zip",
                 zipDirectory =>
                 {
                     // SharpZipLib gives back 2064-02-29T23:10:42 instead of 2064-02-30T27:10:42.
@@ -240,15 +240,15 @@ namespace Knapcode.MiniZip
                 }
             },
             {
-                @"System.IO.Compression\compat\backslashes_FromUnix.zip",
+                "System.IO.Compression/compat/backslashes_FromUnix.zip",
                 ConvertToForwardSlashes
             },
             {
-                @"System.IO.Compression\compat\backslashes_FromWindows.zip",
+                "System.IO.Compression/compat/backslashes_FromWindows.zip",
                 ConvertToForwardSlashes
             },
             {
-                @"System.IO.Compression\StrangeZipFiles\dataDescriptor.zip",
+                "System.IO.Compression/StrangeZipFiles/dataDescriptor.zip",
                 ConvertToForwardSlashes
             },
         };
@@ -257,7 +257,7 @@ namespace Knapcode.MiniZip
         {
             foreach (var zipEntry in zipDirectory.Entries)
             {
-                var fixedName = zipEntry.GetName().Replace(@"\", "/");
+                var fixedName = zipEntry.GetName().Replace("\\", "/");
                 zipEntry.Name = Encoding.ASCII.GetBytes(fixedName);
             }
         }
@@ -265,23 +265,23 @@ namespace Knapcode.MiniZip
         private static IReadOnlyDictionary<string, KnownException> CasesHandledBySharpZipLib = new Dictionary<string, KnownException>
         {
             {
-                @"SharpZipLib\ZipFileHandling.EmbeddedArchive\1.zip",
+                "SharpZipLib/ZipFileHandling.EmbeddedArchive/1.zip",
                 KnownException.Create<MiniZipException>(Strings.InvalidCentralDirectorySignature)
             },
             {
-                @"SharpZipLib\ZipFileHandling.Zip64Useage\1.zip",
+                "SharpZipLib/ZipFileHandling.Zip64Useage/1.zip",
                 KnownException.Create<MiniZipException>(Strings.InvalidCentralDirectorySignature)
             },
             {
-                @"Custom\Spanning.zip",
+                "Custom/Spanning.zip",
                 KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
             },
         };
 
         private static ISet<string> CasesNotHandledBySharpZipLib = new HashSet<string>
         {
-            @"System.IO.Compression\compat\NullCharFileName_FromUnix.zip",
-            @"System.IO.Compression\compat\NullCharFileName_FromWindows.zip",
+            "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
+            "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",
         };
 #endif
 
