@@ -10,11 +10,11 @@ namespace Knapcode.MiniZip
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
-            LargeAsync().GetAwaiter().GetResult();
+            await LargeAsync();
         }
 
         private static async Task SmallAsync()
@@ -112,7 +112,7 @@ namespace Knapcode.MiniZip
             public long _totalResponseBodyBytes = 0;
             public long _totalContentLength = 0;
             public int _totalRequests = 0;
-            
+
             private static readonly HashSet<string> InterestingHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "Range",

@@ -133,7 +133,7 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private static IReadOnlyDictionary<string, KnownException> CasesHandledByBcl = new Dictionary<string, KnownException>
+        private static readonly IReadOnlyDictionary<string, KnownException> CasesHandledByBcl = new Dictionary<string, KnownException>
         {
             {
                 "SharpZipLib/ZipFileHandling.FindEntriesInArchiveExtraData/0.zip",
@@ -145,7 +145,7 @@ namespace Knapcode.MiniZip
             },
         };
 
-        private static IReadOnlyDictionary<string, KnownException> CasesNotHandledByBcl = new Dictionary<string, KnownException>
+        private static readonly IReadOnlyDictionary<string, KnownException> CasesNotHandledByBcl = new Dictionary<string, KnownException>
         {
         };
 
@@ -223,7 +223,7 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private static IReadOnlyDictionary<string, Action<ZipDirectory>> DifferencesFromSharpZipLib = new Dictionary<string, Action<ZipDirectory>>
+        private static readonly IReadOnlyDictionary<string, Action<ZipDirectory>> DifferencesFromSharpZipLib = new Dictionary<string, Action<ZipDirectory>>
         {
             {
                 "System.IO.Compression/badzipfiles/invaliddate.zip",
@@ -262,7 +262,7 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private static IReadOnlyDictionary<string, KnownException> CasesHandledBySharpZipLib = new Dictionary<string, KnownException>
+        private static readonly IReadOnlyDictionary<string, KnownException> CasesHandledBySharpZipLib = new Dictionary<string, KnownException>
         {
             {
                 "SharpZipLib/ZipFileHandling.EmbeddedArchive/1.zip",
@@ -278,7 +278,7 @@ namespace Knapcode.MiniZip
             },
         };
 
-        private static ISet<string> CasesNotHandledBySharpZipLib = new HashSet<string>
+        private static readonly ISet<string> CasesNotHandledBySharpZipLib = new HashSet<string>
         {
             "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
             "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",

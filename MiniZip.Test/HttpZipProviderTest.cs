@@ -210,7 +210,7 @@ namespace Knapcode.MiniZip
                                 "The HTTP response did not have the expected status code HTTP 206 Partial Content. The response was 412 Precondition Failed.",
                                 ex.Message);
                         }
-                        
+
                     }
                 }
             }
@@ -264,7 +264,7 @@ namespace Knapcode.MiniZip
 
         private class TestMessageHandler : HttpMessageHandler
         {
-            private Func<HttpRequestMessage, HttpResponseMessage> _getResponse;
+            private readonly Func<HttpRequestMessage, HttpResponseMessage> _getResponse;
 
             public TestMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> getResponse)
             {

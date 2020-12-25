@@ -16,7 +16,7 @@ namespace Knapcode.MiniZip
 {
     public static class TestUtility
     {
-        private static object TestDataLock = new object();
+        private static readonly object TestDataLock = new object();
         public static readonly string TestDataDirectory = Path.GetFullPath("TestData");
         public const string TestServerDirectory = "TestData";
 

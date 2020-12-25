@@ -59,7 +59,7 @@ namespace Knapcode.MiniZip
                 return 0;
             }
 
-            var read = (int) Math.Min(_buffer.Length - bufferOffset, count);
+            var read = (int)Math.Min(_buffer.Length - bufferOffset, count);
             _buffer.Position = bufferOffset;
             _buffer.ReadExactly(buffer, offset, read);
 
@@ -95,9 +95,9 @@ namespace Knapcode.MiniZip
                 {
                     readOffset = Position;
                 }
-                
+
                 // Read up until the old position (or up to the end, if this is the first read).
-                var readCount =  (int)(BufferPosition - readOffset);
+                var readCount = (int)(BufferPosition - readOffset);
                 var newBuffer = new byte[readCount];
                 var actualRead = await _rangeReader.ReadAsync(readOffset, newBuffer, 0, readCount);
                 _buffer.Prepend(newBuffer);

@@ -28,7 +28,7 @@ namespace Knapcode.MiniZip
         /// <param name="dstOffset">The offset in the destination buffer.</param>
         /// <param name="count">The maximum number of bytes to read.</param>
         /// <returns>The number of bytes read.</returns>
-        public async virtual Task<int> ReadAsync(long srcOffset, byte[] dst, int dstOffset, int count)
+        public virtual async Task<int> ReadAsync(long srcOffset, byte[] dst, int dstOffset, int count)
         {
             using (var stream = await _openStreamAsync())
             {

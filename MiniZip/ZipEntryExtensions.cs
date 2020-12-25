@@ -69,12 +69,12 @@ namespace Knapcode.MiniZip
         /// <param name="entry">The ZIP entry.</param>
         public static DateTime GetLastModified(this CentralDirectoryHeader entry)
         {
-            var year   = 1980 + ((entry.LastModifiedDate & 0b1111_1110_0000_0000) >> 9 );
-            var month  =        ((entry.LastModifiedDate & 0b0000_0001_1110_0000) >> 5 );
-            var day    =        ((entry.LastModifiedDate & 0b0000_0000_0001_1111)      );
-            var hour   =        ((entry.LastModifiedTime & 0b1111_1000_0000_0000) >> 11);
-            var minute =        ((entry.LastModifiedTime & 0b0000_0111_1110_0000) >> 5 );
-            var second =    2 * ((entry.LastModifiedTime & 0b0000_0000_0001_1111)      );
+            var year = 1980 + ((entry.LastModifiedDate & 0b1111_1110_0000_0000) >> 9);
+            var month = ((entry.LastModifiedDate & 0b0000_0001_1110_0000) >> 5);
+            var day = ((entry.LastModifiedDate & 0b0000_0000_0001_1111));
+            var hour = ((entry.LastModifiedTime & 0b1111_1000_0000_0000) >> 11);
+            var minute = ((entry.LastModifiedTime & 0b0000_0111_1110_0000) >> 5);
+            var second = 2 * ((entry.LastModifiedTime & 0b0000_0000_0001_1111));
 
             try
             {

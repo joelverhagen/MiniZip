@@ -14,14 +14,25 @@ namespace Knapcode.MiniZip
     public class HttpZipProvider : IHttpZipProvider
     {
         private readonly HttpClient _httpClient;
+        private readonly IThrottle _httpThrottle;
 
         /// <summary>
         /// Initializes an HTTP ZIP provider. This instance does not dispose the provided <see cref="HttpClient"/>.
         /// </summary>
         /// <param name="httpClient">The HTTP client to use for HTTP requests.</param>
-        public HttpZipProvider(HttpClient httpClient)
+        public HttpZipProvider(HttpClient httpClient) : this(httpClient, httpThrottle: null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes an HTTP ZIP provider. This instance does not dispose the provided <see cref="HttpClient"/>.
+        /// </summary>
+        /// <param name="httpClient">The HTTP client to use for HTTP requests.</param>
+        /// <param name="httpThrottle">The throttle to use for HTTP operations.</param>
+        public HttpZipProvider(HttpClient httpClient, IThrottle httpThrottle)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _httpThrottle = httpThrottle ?? NullThrottle.Instance;
         }
 
         /// <summary>
@@ -87,57 +98,65 @@ namespace Knapcode.MiniZip
                         request.Headers.TryAddWithoutValidation("x-ms-version", "2013-08-15");
                     }
 
-                    using (var response = await _httpClient.SendAsync(request))
+                    await _httpThrottle.WaitAsync();
+                    try
                     {
-                        if (!response.IsSuccessStatusCode)
+                        using (var response = await _httpClient.SendAsync(request))
                         {
-                            throw new MiniZipHttpStatusCodeException(
-                                string.Format(
-                                    Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
-                                    (int)response.StatusCode,
-                                    response.ReasonPhrase),
-                                response.StatusCode,
-                                response.ReasonPhrase);
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                throw new MiniZipHttpStatusCodeException(
+                                    string.Format(
+                                        Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
+                                        (int)response.StatusCode,
+                                        response.ReasonPhrase),
+                                    response.StatusCode,
+                                    response.ReasonPhrase);
+                            }
+
+                            if (response.Content?.Headers?.ContentLength == null)
+                            {
+                                throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
+                            }
+
+                            if (RequireAcceptRanges
+                                && (response.Headers.AcceptRanges == null
+                                    || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit)))
+                            {
+                                throw new MiniZipException(string.Format(
+                                    Strings.AcceptRangesBytesValueNotFoundFormat,
+                                    HttpConstants.BytesUnit));
+                            }
+
+                            var length = response.Content.Headers.ContentLength.Value;
+
+                            var etagBehavior = ETagBehavior;
+                            var etag = response.Headers?.ETag;
+                            if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
+                            {
+                                etag = null;
+                            }
+
+                            if (etag == null && etagBehavior == ETagBehavior.Required)
+                            {
+                                throw new MiniZipException(string.Format(
+                                    Strings.MissingETagHeader,
+                                    nameof(MiniZip.ETagBehavior),
+                                    nameof(ETagBehavior.Required)));
+                            }
+
+                            var headers = Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>()
+                                .Concat(response.Headers)
+                                .Concat(response.Content.Headers)
+                                .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
+                                .ToLookup(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+
+                            return new { Length = length, ETag = etag, Headers = headers };
                         }
-
-                        if (response.Content?.Headers?.ContentLength == null)
-                        {
-                            throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
-                        }
-
-                        if (RequireAcceptRanges
-                            && (response.Headers.AcceptRanges == null
-                                || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit)))
-                        {
-                            throw new MiniZipException(string.Format(
-                                Strings.AcceptRangesBytesValueNotFoundFormat,
-                                HttpConstants.BytesUnit));
-                        }
-
-                        var length = response.Content.Headers.ContentLength.Value;
-
-                        var etagBehavior = ETagBehavior;
-                        var etag = response.Headers?.ETag;
-                        if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
-                        {
-                            etag = null;
-                        }
-
-                        if (etag == null && etagBehavior == ETagBehavior.Required)
-                        {
-                            throw new MiniZipException(string.Format(
-                                Strings.MissingETagHeader,
-                                nameof(MiniZip.ETagBehavior),
-                                nameof(ETagBehavior.Required)));
-                        }
-
-                        var headers = Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>()
-                            .Concat(response.Headers)
-                            .Concat(response.Content.Headers)
-                            .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
-                            .ToLookup(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
-
-                        return new { Length = length, ETag = etag, Headers = headers };
+                    }
+                    finally
+                    {
+                        _httpThrottle.Release();
                     }
                 }
             });

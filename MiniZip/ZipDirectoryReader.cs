@@ -300,7 +300,7 @@ namespace Knapcode.MiniZip
                 zip.OffsetOfCentralDirectory = reader.ReadUInt32();
                 zip.CommentSize = reader.ReadUInt16();
             }
-            
+
             zip.Comment = new byte[zip.CommentSize];
             await ReadFullyAsync(zip.Comment);
 

@@ -50,7 +50,7 @@ namespace Knapcode.MiniZip
             using (var binaryReader = new BinaryReader(srcStream, Encoding.ASCII, leaveOpen: true))
             {
                 // First, read the offset of the central directory.
-                var virtualOffset = (long) binaryReader.ReadUInt64();
+                var virtualOffset = (long)binaryReader.ReadUInt64();
 
                 // Next, wrap the rest of the stream as if it was at the end of the full ZIP file.
                 var boundedStream = new BoundedStream(srcStream, srcStream.Position, srcStream.Length - 1);

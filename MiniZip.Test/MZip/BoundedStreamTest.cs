@@ -199,7 +199,7 @@ namespace Knapcode.MiniZip
             protected void Verify(int startPosition, int endPosition, byte[] actual, int extraBytes)
             {
                 var count = (endPosition - startPosition) + 1;
-                var expected = new byte[count  + extraBytes];
+                var expected = new byte[count + extraBytes];
                 Buffer.BlockCopy(_bytes, startPosition, expected, 0, count);
                 Assert.Equal(expected, actual);
             }

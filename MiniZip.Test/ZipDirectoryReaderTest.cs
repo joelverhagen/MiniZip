@@ -183,7 +183,7 @@ namespace Knapcode.MiniZip
                     TestUtility.VerifyJsonEquals(expected, actual);
                 }
             }
-            
+
             [Theory]
             [InlineData("System.IO.Compression/refzipfiles/fake64.zip", 770, 942)]
             [InlineData("System.IO.Compression/refzipfiles/normal.zip", 2670582, 2671162)]
