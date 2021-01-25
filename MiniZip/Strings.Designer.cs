@@ -19,7 +19,7 @@ namespace Knapcode.MiniZip {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Strings {
@@ -106,11 +106,38 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find Zip64 locator..
+        ///   Looks up a localized string similar to Cannot find ZIP64 locator..
         /// </summary>
         internal static string CannotFindZip64Locator {
             get {
                 return ResourceManager.GetString("CannotFindZip64Locator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The compressed size in the local file header does not match the central directory header..
+        /// </summary>
+        internal static string CentralDirectoryFileSizeDoesNotMatchLocalSize {
+            get {
+                return ResourceManager.GetString("CentralDirectoryFileSizeDoesNotMatchLocalSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The uncompressed size does not match the uncompressed size in the central directory header..
+        /// </summary>
+        internal static string CentralDirectoryUncompressedDoesNotMatchCompressed {
+            get {
+                return ResourceManager.GetString("CentralDirectoryUncompressedDoesNotMatchCompressed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The compression method in the local file header does not match the central directory header..
+        /// </summary>
+        internal static string CompressionMethodDoesNotMatchCentralDirectory {
+            get {
+                return ResourceManager.GetString("CompressionMethodDoesNotMatchCentralDirectory", resourceCulture);
             }
         }
         
@@ -268,6 +295,15 @@ namespace Knapcode.MiniZip {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only stored (uncompressed) entries can be read using this method..
+        /// </summary>
+        internal static string OnlyUncompressedSupported {
+            get {
+                return ResourceManager.GetString("OnlyUncompressedSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the stream must not be before the virtual offset..
         /// </summary>
         internal static string PositionBeforeVirtualOffset {
@@ -282,6 +318,24 @@ namespace Knapcode.MiniZip {
         internal static string PositionMustBeNonNegative {
             get {
                 return ResourceManager.GetString("PositionMustBeNonNegative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading the file data is not supported if there is a data descriptor..
+        /// </summary>
+        internal static string ReadingFileDataNotSupportedFileDescriptor {
+            get {
+                return ResourceManager.GetString("ReadingFileDataNotSupportedFileDescriptor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading the file data is not supported for ZIP4 archives..
+        /// </summary>
+        internal static string ReadingFileDataNotSupportedZip64 {
+            get {
+                return ResourceManager.GetString("ReadingFileDataNotSupportedZip64", resourceCulture);
             }
         }
         

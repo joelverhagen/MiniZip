@@ -124,6 +124,18 @@ namespace Knapcode.MiniZip
         /// <returns>The local file header.</returns>
         public async Task<LocalFileHeader> ReadLocalFileHeaderAsync(ZipDirectory directory, CentralDirectoryHeader entry)
         {
+            return await ReadLocalFileHeaderAsync(directory, entry, readDataDescriptor: true);
+        }
+
+        /// <summary>
+        /// Reads a specific local file header given a central directory header for a file.
+        /// </summary>
+        /// <param name="directory">The ZIP directory instance containing the provided <paramref name="entry"/>.</param>
+        /// <param name="entry">The central directory header to read the local file header for.</param>
+        /// <param name="readDataDescriptor">Whether or not to read the data descriptor, if present.</param>
+        /// <returns>The local file header.</returns>
+        public async Task<LocalFileHeader> ReadLocalFileHeaderAsync(ZipDirectory directory, CentralDirectoryHeader entry, bool readDataDescriptor)
+        {
             if (directory == null)
             {
                 throw new ArgumentNullException(nameof(directory));
@@ -180,12 +192,58 @@ namespace Knapcode.MiniZip
             localEntry.Zip64DataFields = ReadZip64DataFields(localEntry);
 
             // Try to read the data descriptor.
-            if ((localEntry.Flags & (ushort)ZipEntryFlags.DataDescriptor) != 0)
+            if (readDataDescriptor && (localEntry.Flags & (ushort)ZipEntryFlags.DataDescriptor) != 0)
             {
                 localEntry.DataDescriptor = await ReadDataDescriptor(directory, entries, entry, zip64, localEntry);
             }
 
             return localEntry;
+        }
+
+        /// <summary>
+        /// Reads the data for an uncompressed file entry. This method fails if the entry is compressed.
+        /// </summary>
+        /// <param name="directory">The ZIP directory instance containing the provided <paramref name="entry"/>.</param>
+        /// <param name="entry">The central directory header to read the uncompressed file data for.</param>
+        /// <returns>The uncompressed file data.</returns>
+        public async Task<byte[]> ReadUncompressedFileDataAsync(ZipDirectory directory, CentralDirectoryHeader entry)
+        {
+            if (entry.CompressionMethod != (ushort)ZipCompressionMethod.Store)
+            {
+                throw new ArgumentException(Strings.OnlyUncompressedSupported, nameof(entry));
+            }
+
+            if (entry.CompressedSize != entry.UncompressedSize)
+            {
+                throw new MiniZipException(Strings.CentralDirectoryUncompressedDoesNotMatchCompressed);
+            }
+
+            if (entry.Zip64DataFields.Any())
+            {
+                throw new MiniZipException(Strings.ReadingFileDataNotSupportedZip64);
+            }
+
+            var localEntry = await ReadLocalFileHeaderAsync(directory, entry, readDataDescriptor: false);
+
+            if (localEntry.CompressionMethod != (ushort)ZipCompressionMethod.Store)
+            {
+                throw new MiniZipException(Strings.CompressionMethodDoesNotMatchCentralDirectory);
+            }
+
+            if ((localEntry.Flags & (ushort)ZipEntryFlags.DataDescriptor) != 0)
+            {
+                throw new MiniZipException(Strings.ReadingFileDataNotSupportedFileDescriptor);
+            }
+
+            if (localEntry.CompressedSize != entry.CompressedSize)
+            {
+                throw new MiniZipException(Strings.CentralDirectoryFileSizeDoesNotMatchLocalSize);
+            }
+
+            var data = new byte[localEntry.CompressedSize];
+            await ReadFullyAsync(data);
+
+            return data;
         }
 
         private async Task<DataDescriptor> ReadDataDescriptor(

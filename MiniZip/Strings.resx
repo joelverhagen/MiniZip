@@ -128,7 +128,7 @@
     <value>Cannot find central directory.</value>
   </data>
   <data name="CannotFindZip64Locator" xml:space="preserve">
-    <value>Cannot find Zip64 locator.</value>
+    <value>Cannot find ZIP64 locator.</value>
   </data>
   <data name="ContentLengthHeaderNotFound" xml:space="preserve">
     <value>The Content-Length header was expected but not found.</value>
@@ -218,5 +218,23 @@
     <value>An ETag header is required when using {0}.{1}.</value>
     <comment>{0} is the enum type name.
 {1} is the enum value name.</comment>
+  </data>
+  <data name="CentralDirectoryFileSizeDoesNotMatchLocalSize" xml:space="preserve">
+    <value>The compressed size in the local file header does not match the central directory header.</value>
+  </data>
+  <data name="CentralDirectoryUncompressedDoesNotMatchCompressed" xml:space="preserve">
+    <value>The uncompressed size does not match the uncompressed size in the central directory header.</value>
+  </data>
+  <data name="CompressionMethodDoesNotMatchCentralDirectory" xml:space="preserve">
+    <value>The compression method in the local file header does not match the central directory header.</value>
+  </data>
+  <data name="OnlyUncompressedSupported" xml:space="preserve">
+    <value>Only stored (uncompressed) entries can be read using this method.</value>
+  </data>
+  <data name="ReadingFileDataNotSupportedFileDescriptor" xml:space="preserve">
+    <value>Reading the file data is not supported if there is a data descriptor.</value>
+  </data>
+  <data name="ReadingFileDataNotSupportedZip64" xml:space="preserve">
+    <value>Reading the file data is not supported for ZIP4 archives.</value>
   </data>
 </root>

@@ -10,6 +10,27 @@ namespace Knapcode.MiniZip
 {
     public class ZipDirectoryReaderTest
     {
+        public class ReadUncompressedFileDataAsync
+        {
+            [Fact]
+            public async Task ReadsUncompressedFile()
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData("Custom/basetestpackage.1.0.0.nupkg"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+                    var directory = await reader.ReadAsync();
+                    var entry = directory.Entries.Single(x => x.GetName() == ".signature.p7s");
+
+                    // Act
+                    var data = await reader.ReadUncompressedFileDataAsync(directory, entry);
+
+                    // Assert
+                    Assert.Equal(TestUtility.ReadTestData("Custom/.signature.p7s"), data);
+                }
+            }
+        }
+
         public class ReadLocalFileHeaderAsync
         {
             [Fact]

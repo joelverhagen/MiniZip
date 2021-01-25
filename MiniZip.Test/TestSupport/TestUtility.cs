@@ -23,6 +23,10 @@ namespace Knapcode.MiniZip
         public static IReadOnlyList<string> TestDataPaths => Directory
             .EnumerateFiles(TestDataDirectory, "*", SearchOption.AllDirectories)
             .Select(x => GetRelativePath(x, TestDataDirectory))
+            .Except(new[]
+            {
+                "Custom/.signature.p7s",
+            })
             .ToList();
 
         public static IReadOnlyList<string> InvalidTestDataPaths => new[]
@@ -76,6 +80,11 @@ namespace Knapcode.MiniZip
             var expectedJson = JsonConvert.SerializeObject(expected, Formatting.Indented);
             var actualJson = JsonConvert.SerializeObject(actual, Formatting.Indented);
             Assert.Equal(expectedJson, actualJson);
+        }
+
+        public static byte[] ReadTestData(string path)
+        {
+            return BufferTestData(path).ToArray();
         }
 
         public static MemoryStream BufferTestData(string path)
