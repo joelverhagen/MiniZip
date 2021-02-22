@@ -28,9 +28,9 @@ namespace Knapcode.MiniZip
             [Fact]
             public async Task ThrowsWhenRecievingNonSuccessStatusCode()
             {
-                var exception = await Assert.ThrowsAsync<MiniZipHttpStatusCodeException>(
+                var exception = await Assert.ThrowsAsync<MiniZipHttpException>(
                     () => _target.GetReaderAsync(_requestUri));
-                Assert.Equal(
+                Assert.StartsWith(
                     "The HTTP response did not have a success status code while trying to determine the content length. The response was 404 Not Found.",
                     exception.Message);
             }
@@ -42,9 +42,12 @@ namespace Knapcode.MiniZip
                 _getResponse = r => new HttpResponseMessage(HttpStatusCode.OK);
 
                 // Act & Assert
-                var exception = await Assert.ThrowsAsync<MiniZipException>(
+                var ex = await Assert.ThrowsAsync<MiniZipHttpException>(
                     () => _target.GetReaderAsync(_requestUri));
-                Assert.Equal(Strings.ContentLengthHeaderNotFound, exception.Message);
+                Assert.StartsWith(Strings.ContentLengthHeaderNotFound, ex.Message);
+                Assert.Equal(HttpStatusCode.OK, ex.StatusCode);
+                Assert.Equal("OK", ex.ReasonPhrase);
+                Assert.StartsWith("HTTP/", ex.DebugResponse);
             }
 
             [Fact]
@@ -57,11 +60,14 @@ namespace Knapcode.MiniZip
                 };
 
                 // Act & Assert
-                var exception = await Assert.ThrowsAsync<MiniZipException>(
+                var ex = await Assert.ThrowsAsync<MiniZipHttpException>(
                     () => _target.GetReaderAsync(_requestUri));
-                Assert.Equal(
+                Assert.StartsWith(
                     string.Format(Strings.AcceptRangesBytesValueNotFoundFormat, HttpConstants.BytesUnit),
-                    exception.Message);
+                    ex.Message);
+                Assert.Equal(HttpStatusCode.OK, ex.StatusCode);
+                Assert.Equal("OK", ex.ReasonPhrase);
+                Assert.StartsWith("HTTP/", ex.DebugResponse);
             }
 
             [Fact]
@@ -78,11 +84,14 @@ namespace Knapcode.MiniZip
                 };
 
                 // Act & Assert
-                var exception = await Assert.ThrowsAsync<MiniZipException>(
+                var ex = await Assert.ThrowsAsync<MiniZipHttpException>(
                     () => _target.GetReaderAsync(_requestUri));
-                Assert.Equal(
+                Assert.StartsWith(
                     string.Format(Strings.AcceptRangesBytesValueNotFoundFormat, HttpConstants.BytesUnit),
-                    exception.Message);
+                    ex.Message);
+                Assert.Equal(HttpStatusCode.OK, ex.StatusCode);
+                Assert.Equal("OK", ex.ReasonPhrase);
+                Assert.StartsWith("HTTP/", ex.DebugResponse);
             }
 
             [Fact]
@@ -139,8 +148,11 @@ namespace Knapcode.MiniZip
                     var target = new HttpZipProvider(client) { ETagBehavior = ETagBehavior.Required };
 
                     // Act & Assert
-                    var ex = await Assert.ThrowsAsync<MiniZipException>(() => target.GetReaderAsync(requestUri));
-                    Assert.Equal("An ETag header is required when using ETagBehavior.Required.", ex.Message);
+                    var ex = await Assert.ThrowsAsync<MiniZipHttpException>(() => target.GetReaderAsync(requestUri));
+                    Assert.StartsWith("An ETag header is required when using ETagBehavior.Required.", ex.Message);
+                    Assert.Equal(HttpStatusCode.OK, ex.StatusCode);
+                    Assert.Equal("OK", ex.ReasonPhrase);
+                    Assert.StartsWith("HTTP/", ex.DebugResponse);
                 }
             }
 
@@ -205,10 +217,13 @@ namespace Knapcode.MiniZip
                         }
                         else
                         {
-                            var ex = await Assert.ThrowsAsync<MiniZipHttpStatusCodeException>(() => reader.ReadAsync());
-                            Assert.Equal(
+                            var ex = await Assert.ThrowsAsync<MiniZipHttpException>(() => reader.ReadAsync());
+                            Assert.StartsWith(
                                 "The HTTP response did not have the expected status code HTTP 206 Partial Content. The response was 412 Precondition Failed.",
                                 ex.Message);
+                            Assert.Equal(HttpStatusCode.PreconditionFailed, ex.StatusCode);
+                            Assert.Equal("Precondition Failed", ex.ReasonPhrase);
+                            Assert.StartsWith("HTTP/", ex.DebugResponse);
                         }
 
                     }
@@ -248,10 +263,13 @@ namespace Knapcode.MiniZip
                         var reader = await target.GetReaderAsync(requestUri);
 
                         // Act & Assert
-                        var ex = await Assert.ThrowsAsync<MiniZipException>(() => reader.ReadAsync());
-                        Assert.Equal(
+                        var ex = await Assert.ThrowsAsync<MiniZipHttpException>(() => reader.ReadAsync());
+                        Assert.StartsWith(
                             "The length of the ZIP file fetched over HTTP changed from the expected 2671162 bytes to 22 bytes.",
                             ex.Message);
+                        Assert.Equal(HttpStatusCode.PartialContent, ex.StatusCode);
+                        Assert.Equal("Partial Content", ex.ReasonPhrase);
+                        Assert.StartsWith("HTTP/", ex.DebugResponse);
                     }
                 }
             }

@@ -18,7 +18,7 @@ namespace Knapcode.MiniZip
                     attempt++;
                     return await actAsync();
                 }
-                catch (Exception ex) when (ex is MiniZipHttpStatusCodeException || ex is IOException || ex is HttpRequestException)
+                catch (Exception ex) when (ex is MiniZipHttpException || ex is IOException || ex is HttpRequestException)
                 {
                     if (attempt >= maxAttempts)
                     {

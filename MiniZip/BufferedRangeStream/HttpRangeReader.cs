@@ -90,20 +90,17 @@ namespace Knapcode.MiniZip
                         {
                             if (response.StatusCode != HttpStatusCode.PartialContent)
                             {
-                                throw new MiniZipHttpStatusCodeException(
-                                    string.Format(
-                                        Strings.NonPartialContentHttpResponse,
-                                        (int)response.StatusCode,
-                                        response.ReasonPhrase),
-                                    response.StatusCode,
-                                    response.ReasonPhrase);
+                                throw await response.ToHttpExceptionAsync(string.Format(
+                                    Strings.NonPartialContentHttpResponse,
+                                    (int)response.StatusCode,
+                                    response.ReasonPhrase));
                             }
 
                             if (_requireContentRange || response.Content.Headers.ContentRange != null)
                             {
                                 if (response.Content.Headers.ContentRange == null)
                                 {
-                                    throw new MiniZipException(Strings.ContentRangeHeaderNotFound);
+                                    throw await response.ToHttpExceptionAsync(Strings.ContentRangeHeaderNotFound);
                                 }
 
                                 if (!response.Content.Headers.ContentRange.HasRange
@@ -111,12 +108,12 @@ namespace Knapcode.MiniZip
                                     || response.Content.Headers.ContentRange.From != srcOffset
                                     || response.Content.Headers.ContentRange.To != (srcOffset + count) - 1)
                                 {
-                                    throw new MiniZipException(Strings.InvalidContentRangeHeader);
+                                    throw await response.ToHttpExceptionAsync(Strings.InvalidContentRangeHeader);
                                 }
 
                                 if (response.Content.Headers.ContentRange.Length != _length)
                                 {
-                                    throw new MiniZipException(string.Format(
+                                    throw await response.ToHttpExceptionAsync(string.Format(
                                         Strings.LengthOfHttpContentChanged,
                                         response.Content.Headers.ContentRange.Length,
                                         _length));

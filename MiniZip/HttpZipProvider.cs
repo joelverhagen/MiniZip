@@ -105,25 +105,23 @@ namespace Knapcode.MiniZip
                         {
                             if (!response.IsSuccessStatusCode)
                             {
-                                throw new MiniZipHttpStatusCodeException(
+                                throw await response.ToHttpExceptionAsync(
                                     string.Format(
                                         Strings.UnsuccessfulHttpStatusCodeWhenGettingLength,
                                         (int)response.StatusCode,
-                                        response.ReasonPhrase),
-                                    response.StatusCode,
-                                    response.ReasonPhrase);
+                                        response.ReasonPhrase));
                             }
 
                             if (response.Content?.Headers?.ContentLength == null)
                             {
-                                throw new MiniZipException(Strings.ContentLengthHeaderNotFound);
+                                throw await response.ToHttpExceptionAsync(Strings.ContentLengthHeaderNotFound);
                             }
 
                             if (RequireAcceptRanges
                                 && (response.Headers.AcceptRanges == null
                                     || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit)))
                             {
-                                throw new MiniZipException(string.Format(
+                                throw await response.ToHttpExceptionAsync(string.Format(
                                     Strings.AcceptRangesBytesValueNotFoundFormat,
                                     HttpConstants.BytesUnit));
                             }
@@ -139,7 +137,7 @@ namespace Knapcode.MiniZip
 
                             if (etag == null && etagBehavior == ETagBehavior.Required)
                             {
-                                throw new MiniZipException(string.Format(
+                                throw await response.ToHttpExceptionAsync(string.Format(
                                     Strings.MissingETagHeader,
                                     nameof(MiniZip.ETagBehavior),
                                     nameof(ETagBehavior.Required)));
