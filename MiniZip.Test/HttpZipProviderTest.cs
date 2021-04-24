@@ -39,7 +39,10 @@ namespace Knapcode.MiniZip
             public async Task ThrowsWhenMissingContentLength()
             {
                 // Arrange
-                _getResponse = r => new HttpResponseMessage(HttpStatusCode.OK);
+                _getResponse = r => new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("test content") { Headers = { ContentLength = null } }
+                };
 
                 // Act & Assert
                 var ex = await Assert.ThrowsAsync<MiniZipHttpException>(
