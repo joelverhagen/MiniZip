@@ -49,6 +49,32 @@ namespace Knapcode.MiniZip
         /// <param name="encoding">The encoding to decode the bytes with.</param>
         public static string GetName(this CentralDirectoryHeader entry, Encoding encoding)
         {
+            return GetString(entry, encoding, entry.Name);
+        }
+
+        /// <summary>
+        /// Determines the comment of the <see cref="CentralDirectoryHeader"/> by decoding the comment bytes. Uses UTF-8
+        /// encoding if the <see cref="FileData.Flags"/> indicate as such, otherwise uses the default code page.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
+        public static string GetComment(this CentralDirectoryHeader entry)
+        {
+            return entry.GetComment(encoding: null);
+        }
+
+        /// <summary>
+        /// Determines the comment of the <see cref="CentralDirectoryHeader"/> by decoding the comment bytes with the provided
+        /// encoding.
+        /// </summary>
+        /// <param name="entry">The ZIP entry.</param>
+        /// <param name="encoding">The encoding to decode the bytes with.</param>
+        public static string GetComment(this CentralDirectoryHeader entry, Encoding encoding)
+        {
+            return GetString(entry, encoding, entry.Comment);
+        }
+
+        private static string GetString(CentralDirectoryHeader entry, Encoding encoding, byte[] bytes)
+        {
             if (encoding == null)
             {
                 encoding = Encoding.GetEncoding(codepage: 0);
@@ -58,7 +84,7 @@ namespace Knapcode.MiniZip
                 throw new ArgumentException(Strings.UTF8Mismatch);
             }
 
-            return encoding.GetString(entry.Name);
+            return encoding.GetString(bytes);
         }
 
         /// <summary>

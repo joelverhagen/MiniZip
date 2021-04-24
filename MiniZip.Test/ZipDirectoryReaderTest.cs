@@ -161,6 +161,40 @@ namespace Knapcode.MiniZip
         public class ReadAsync
         {
             [Fact]
+            public async Task ReadsDirectoryComment()
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData("Custom/comment-on-archive.zip"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+
+                    // Act
+                    var output = await reader.ReadAsync();
+
+                    // Assert
+                    Assert.Equal("This is a comment on the entire archive.", output.GetComment());
+                }
+            }
+
+            [Fact]
+            public async Task ReadsEntryComment()
+            {
+                // Arrange
+                using (var stream = TestUtility.BufferTestData("Custom/comment-on-entry.zip"))
+                {
+                    var reader = new ZipDirectoryReader(stream);
+
+                    // Act
+                    var output = await reader.ReadAsync();
+
+                    // Assert
+                    Assert.Equal(2, output.Entries.Count);
+                    Assert.Empty(output.Entries.Single(x => x.GetName() == "no-comment.txt").GetComment());
+                    Assert.Equal("Comment on test.txt", output.Entries.Single(x => x.GetName() == "test.txt").GetComment());
+                }
+            }
+
+            [Fact]
             public async Task AllowsReadingTwice()
             {
                 // Arrange
