@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(CoreOnly)' != 'true'">net472;netcoreapp3.1</TargetFrameworks>
-    <TargetFrameworks Condition="'$(CoreOnly)' == 'true'">netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CoreOnly)' != 'true'">net472;net5.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CoreOnly)' == 'true'">net5.0</TargetFrameworks>
     <AssemblyName>Knapcode.MiniZip.Test</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     
