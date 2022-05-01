@@ -167,23 +167,12 @@ namespace Knapcode.MiniZip
                     Assert.Equal(knownException.Message, miniZip.Exception.Message);
                     Assert.True(sharpZipLib.Success);
                 }
-                else if (CasesNotHandledBySharpZipLib.Contains(path))
-                {
-                    // This behavior seems to vary based on the version of .NET Framework or something.
-                    // Make no assertions. 
-                    Assert.True(miniZip.Success);
-                }
                 else
                 {
                     Assert.Equal(sharpZipLib.Success, miniZip.Success);
                     if (miniZip.Success)
                     {
                         Assert.Equal(sharpZipLib.Data.Count, miniZip.Data.Entries.Count);
-
-                        if (DifferencesFromSharpZipLib.TryGetValue(path, out var mutate))
-                        {
-                            mutate(miniZip.Data);
-                        }
 
                         var nameToSharpZipLib = sharpZipLib
                             .Data
@@ -215,7 +204,19 @@ namespace Knapcode.MiniZip
                                 Assert.Equal((ulong)sharpZipLibEntries[i].CompressedSize, miniZipEntries[i].GetCompressedSize());
                                 Assert.Equal((ulong)sharpZipLibEntries[i].Size, miniZipEntries[i].GetUncompressedSize());
                                 Assert.Equal((uint)sharpZipLibEntries[i].ExternalFileAttributes, miniZipEntries[i].ExternalAttributes);
-                                Assert.Equal(sharpZipLibEntries[i].DateTime, miniZipEntries[i].GetLastModified());
+
+                                var sharpZipLibLastModified = sharpZipLibEntries[i].DateTime;
+                                var miniZipLastModified = miniZipEntries[i].GetLastModified();
+                                if (LastModifiedDifferencesFromSharpZipLib.TryGetValue(path, out var expected))
+                                {
+                                    Assert.Equal(expected.SharpZipLib, sharpZipLibLastModified);
+                                    Assert.Equal(expected.MiniZip, miniZipLastModified);
+
+                                }
+                                else
+                                {
+                                    Assert.Equal(sharpZipLibLastModified, miniZipLastModified);
+                                }
                             }
                         }
                     }
@@ -223,43 +224,94 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private static readonly IReadOnlyDictionary<string, Action<ZipDirectory>> DifferencesFromSharpZipLib = new Dictionary<string, Action<ZipDirectory>>
+        private static readonly IReadOnlyDictionary<string, LastModifiedTimes> LastModifiedDifferencesFromSharpZipLib = new Dictionary<string, LastModifiedTimes>
         {
             {
                 "System.IO.Compression/badzipfiles/invaliddate.zip",
-                zipDirectory =>
+                new LastModifiedTimes
                 {
-                    // SharpZipLib gives back 2064-02-29T23:10:42 instead of 2064-02-30T27:10:42.
-                    var entry = zipDirectory.Entries.Single();
-
-                    entry.LastModifiedDate &= 0b1111_1111_1110_0000;
-                    entry.LastModifiedDate |= 29;
-
-                    entry.LastModifiedTime &= 0b0000_0111_1111_1111;
-                    entry.LastModifiedTime |= 23 << 11;
+                    SharpZipLib = DateTime.Parse("2064-02-29T23:10:42.0000000"),
+                    MiniZip = DateTime.Parse("1980-01-01T00:00:00.0000000"),
                 }
             },
             {
                 "System.IO.Compression/compat/backslashes_FromUnix.zip",
-                ConvertToForwardSlashes
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:14:30.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:14:30.0000000"),
+                }
             },
             {
                 "System.IO.Compression/compat/backslashes_FromWindows.zip",
-                ConvertToForwardSlashes
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:14:30.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:14:30.0000000"),
+                }
             },
             {
-                "System.IO.Compression/StrangeZipFiles/dataDescriptor.zip",
-                ConvertToForwardSlashes
+                "System.IO.Compression/compat/Linux_RW_RW_R__.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2017-03-14T13:52:14.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2017-03-14T13:52:14.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/Linux_RWXRW_R__.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2017-03-14T13:52:58.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2017-03-14T13:52:58.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:15:11.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:15:12.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:15:11.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:15:12.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/OSX_RWXRW_R__.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2017-03-14T13:55:26.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2017-03-14T13:55:26.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/WindowsInvalid_FromUnix.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:15:11.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:15:12.0000000"),
+                }
+            },
+            {
+                "System.IO.Compression/compat/WindowsInvalid_FromWindows.zip",
+                new LastModifiedTimes
+                {
+                    SharpZipLib = DateTime.Parse("2016-01-08T12:15:11.0000000").ToUniversalTime(),
+                    MiniZip = DateTime.Parse("2016-01-08T12:15:12.0000000"),
+                }
             },
         };
 
-        private static void ConvertToForwardSlashes(ZipDirectory zipDirectory)
+        internal class LastModifiedTimes
         {
-            foreach (var zipEntry in zipDirectory.Entries)
-            {
-                var fixedName = zipEntry.GetName().Replace("\\", "/");
-                zipEntry.Name = Encoding.ASCII.GetBytes(fixedName);
-            }
+            public DateTime SharpZipLib { get; set; }
+            public DateTime MiniZip { get; set; }
         }
 
         private static readonly IReadOnlyDictionary<string, KnownException> CasesHandledBySharpZipLib = new Dictionary<string, KnownException>
@@ -276,12 +328,6 @@ namespace Knapcode.MiniZip
                 "Custom/Spanning.zip",
                 KnownException.Create<MiniZipException>("Archives spanning multiple disks are not supported.")
             },
-        };
-
-        private static readonly ISet<string> CasesNotHandledBySharpZipLib = new HashSet<string>
-        {
-            "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
-            "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",
         };
 #endif
 
