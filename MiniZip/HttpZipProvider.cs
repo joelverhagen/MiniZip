@@ -65,6 +65,13 @@ namespace Knapcode.MiniZip
         public bool RequireContentRange { get; set; } = true;
 
         /// <summary>
+        /// Whether or not to allow etag variants when an If-Match returns a 412 Precondition Failed. This can happen
+        /// when a CDN is in front of Azure Blob Storage and a unexpected (quoted or unquoted) etag is cached. By
+        /// default, this behavior only enabled if the server is detected to be backed by Azure Blob Storage.
+        /// </summary>
+        public bool? AllowETagVariants { get; set; }
+
+        /// <summary>
         /// Initialize the buffered range reader stream provided request URL.
         /// </summary>
         /// <param name="requestUri">The request URL.</param>
@@ -89,7 +96,7 @@ namespace Knapcode.MiniZip
         private async Task<Tuple<Stream, ILookup<string, string>>> GetStreamAndHeadersAsync(Uri requestUri)
         {
             // Determine if the exists endpoint's length and whether it supports range requests.
-            var info = await RetryHelper.RetryAsync(async () =>
+            var info = await RetryHelper.RetryAsync(async lastException =>
             {
                 using (var request = new HttpRequestMessage(HttpMethod.Head, requestUri))
                 {
@@ -117,6 +124,19 @@ namespace Knapcode.MiniZip
                                 throw await response.ToHttpExceptionAsync(Strings.ContentLengthHeaderNotFound);
                             }
 
+                            // If unspecified, only allow etag variants if the server appears to be Azure Blob Storage.
+                            bool allowETagVariants;
+                            if (!AllowETagVariants.HasValue
+                                && response.Headers.TryGetValues("x-ms-version", out _)
+                                && response.Headers.TryGetValues("x-ms-blob-type", out _))
+                            {
+                                allowETagVariants = true;
+                            }
+                            else
+                            {
+                                allowETagVariants = AllowETagVariants.GetValueOrDefault(false);
+                            }
+
                             if (RequireAcceptRanges
                                 && (response.Headers.AcceptRanges == null
                                     || !response.Headers.AcceptRanges.Contains(HttpConstants.BytesUnit)))
@@ -129,8 +149,17 @@ namespace Knapcode.MiniZip
                             var length = response.Content.Headers.ContentLength.Value;
 
                             var etagBehavior = ETagBehavior;
-                            var etag = response.Headers?.ETag;
-                            if (etag != null && (etag.IsWeak || etagBehavior == ETagBehavior.Ignore))
+
+                            // Even though we may be sending the x-ms-version header to Azure Blob Storage, it's
+                            // possible a CDN or other intermediate layer has cached the response ETag header without
+                            // quotes. This is why we don't use the parsed response.Headers.ETag value.
+                            string etag = null;
+                            if (response.Headers.TryGetValues("ETag", out var etags) && etags.Any())
+                            {
+                                etag = etags.First();
+                            }
+
+                            if (etag != null && (etag.StartsWith("W/") || etagBehavior == ETagBehavior.Ignore))
                             {
                                 etag = null;
                             }
@@ -149,7 +178,7 @@ namespace Knapcode.MiniZip
                                 .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
                                 .ToLookup(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
 
-                            return new { Length = length, ETag = etag, Headers = headers };
+                            return new { Length = length, ETag = etag, AllowETagVariants = allowETagVariants, Headers = headers };
                         }
                     }
                     finally
@@ -159,7 +188,16 @@ namespace Knapcode.MiniZip
                 }
             });
 
-            var httpRangeReader = new HttpRangeReader(_httpClient, requestUri, info.Length, info.ETag, RequireContentRange);
+            var httpRangeReader = new HttpRangeReader(
+                _httpClient,
+                requestUri,
+                info.Length,
+                info.ETag,
+                RequireContentRange,
+                SendXMsVersionHeader,
+                info.AllowETagVariants,
+                _httpThrottle);
+
             var bufferSizeProvider = BufferSizeProvider ?? NullBufferSizeProvider.Instance;
             var stream = new BufferedRangeStream(httpRangeReader, info.Length, bufferSizeProvider);
 

@@ -1,21 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="build">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(CoreOnly)' != 'true'">netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition="'$(CoreOnly)' != 'true'">netstandard2.0;net451</TargetFrameworks>
     <TargetFrameworks Condition="'$(CoreOnly)' == 'true'">netstandard2.0</TargetFrameworks>
     <AssemblyName>Knapcode.MiniZip</AssemblyName>
     <RootNamespace>Knapcode.MiniZip</RootNamespace>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    
+
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
 
-    <Version>0.17.0</Version>
+    <Version>0.18.0</Version>
 
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
+    <PackageReleaseNotes>Fix bug related to quoted or unquoted etags held by a CDN or caching layer</PackageReleaseNotes>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>zip;http;partial;range;mzip;minizip;fetch;directory</PackageTags>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -28,6 +31,13 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
@@ -51,7 +61,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net451'">
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 

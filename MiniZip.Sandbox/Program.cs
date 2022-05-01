@@ -61,7 +61,10 @@ namespace Knapcode.MiniZip
             {
                 // This provider uses and HTTP client and initializes a ZipDirectoryReader from a URL. This URL
                 // must support HEAD method, Content-Length response header, and Range request header.
-                var httpZipProvider = new HttpZipProvider(httpClient);
+                var httpZipProvider = new HttpZipProvider(httpClient)
+                {
+                    RequireAcceptRanges = false,
+                };
 
                 foreach (var url in urls)
                 {
@@ -119,6 +122,8 @@ namespace Knapcode.MiniZip
                 "Accept-Ranges",
                 "Content-Range",
                 "Content-Length",
+                "ETag",
+                "If-Match",
             };
 
             public long TotalResponseBodyBytes => _totalResponseBodyBytes;

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -23,7 +22,10 @@ namespace Knapcode.MiniZip
                 string mzipPath;
                 using (var httpClient = new HttpClient())
                 {
-                    var httpZipProvider = new HttpZipProvider(httpClient);
+                    var httpZipProvider = new HttpZipProvider(httpClient)
+                    {
+                        RequireAcceptRanges = false,
+                    };
                     using (var reader = await httpZipProvider.GetReaderAsync(packageUri))
                     {
                         // Read the ZIP directory from the .nupkg URL.
@@ -66,7 +68,10 @@ namespace Knapcode.MiniZip
 
                 using (var httpClient = new HttpClient())
                 {
-                    var httpZipProvider = new HttpZipProvider(httpClient);
+                    var httpZipProvider = new HttpZipProvider(httpClient)
+                    {
+                        RequireAcceptRanges = false,
+                    };
                     using (var reader = await httpZipProvider.GetReaderAsync(packageUri))
                     {
                         // Read the ZIP directory from the .nupkg URL.
