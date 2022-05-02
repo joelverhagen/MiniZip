@@ -207,13 +207,7 @@ namespace Knapcode.MiniZip
 
                                 var sharpZipLibLastModified = sharpZipLibEntries[i].DateTime;
                                 var miniZipLastModified = miniZipEntries[i].GetLastModified();
-                                if (LastModifiedDifferencesFromSharpZipLib.TryGetValue(path, out var expected))
-                                {
-                                    Assert.Equal(expected.SharpZipLib, sharpZipLibLastModified);
-                                    Assert.Equal(expected.MiniZip, miniZipLastModified);
-
-                                }
-                                else
+                                if (!LastModifiedDifferencesFromSharpZipLib.Contains(path))
                                 {
                                     Assert.Equal(sharpZipLibLastModified, miniZipLastModified);
                                 }
@@ -224,68 +218,18 @@ namespace Knapcode.MiniZip
             }
         }
 
-        private static readonly IReadOnlyDictionary<string, LastModifiedTimes> LastModifiedDifferencesFromSharpZipLib = new Dictionary<string, LastModifiedTimes>
+        private static readonly IReadOnlySet<string> LastModifiedDifferencesFromSharpZipLib = new HashSet<string>
         {
-            {
-                "System.IO.Compression/badzipfiles/invaliddate.zip",
-                new LastModifiedTimes
-                {
-                    SharpZipLib = DateTime.Parse("2064-02-29T23:10:42.0000000"),
-                    MiniZip = DateTime.Parse("1980-01-01T00:00:00.0000000"),
-                }
-            },
-            {
-                "System.IO.Compression/compat/backslashes_FromUnix.zip",
-                new LastModifiedTimes("2016-01-08T20:14:30.0000000Z")
-            },
-            {
-                "System.IO.Compression/compat/backslashes_FromWindows.zip",
-                new LastModifiedTimes("2016-01-08T20:14:30.0000000Z")
-            },
-            {
-                "System.IO.Compression/compat/Linux_RW_RW_R__.zip",
-                new LastModifiedTimes("2017-03-14T20:52:14.0000000Z")
-            },
-            {
-                "System.IO.Compression/compat/Linux_RWXRW_R__.zip",
-                new LastModifiedTimes("2017-03-14T20:52:58.0000000Z")
-            },
-            {
-                "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
-                new LastModifiedTimes
-                {
-                    SharpZipLib = DateTime.Parse("2016-01-08T20:15:11.0000000Z").ToUniversalTime(),
-                    MiniZip = DateTime.Parse("2016-01-08T12:15:12.0000000"),
-                }
-            },
-            {
-                "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",
-                new LastModifiedTimes("2016-01-08T20:15:11.0000000Z")
-                {
-                    SharpZipLib = DateTime.Parse("2016-01-08T20:15:11.0000000Z").ToUniversalTime(),
-                    MiniZip = DateTime.Parse("2016-01-08T20:15:12.0000000Z").ToLocalTime(),
-                }
-            },
-            {
-                "System.IO.Compression/compat/OSX_RWXRW_R__.zip",
-                new LastModifiedTimes("2017-03-14T20:55:26.0000000Z")
-            },
-            {
-                "System.IO.Compression/compat/WindowsInvalid_FromUnix.zip",
-                new LastModifiedTimes
-                {
-                    SharpZipLib = DateTime.Parse("2016-01-08T20:15:11.0000000Z").ToUniversalTime(),
-                    MiniZip = DateTime.Parse("2016-01-08T20:15:12.0000000Z").ToLocalTime(),
-                }
-            },
-            {
-                "System.IO.Compression/compat/WindowsInvalid_FromWindows.zip",
-                new LastModifiedTimes
-                {
-                    SharpZipLib = DateTime.Parse("2016-01-08T20:15:11.0000000Z").ToUniversalTime(),
-                    MiniZip = DateTime.Parse("2016-01-08T20:15:12.0000000").ToLocalTime(),
-                }
-            },
+            "System.IO.Compression/badzipfiles/invaliddate.zip",
+            "System.IO.Compression/compat/backslashes_FromUnix.zip",
+            "System.IO.Compression/compat/backslashes_FromWindows.zip",
+            "System.IO.Compression/compat/Linux_RW_RW_R__.zip",
+            "System.IO.Compression/compat/Linux_RWXRW_R__.zip",
+            "System.IO.Compression/compat/NullCharFileName_FromUnix.zip",
+            "System.IO.Compression/compat/NullCharFileName_FromWindows.zip",
+            "System.IO.Compression/compat/OSX_RWXRW_R__.zip",
+            "System.IO.Compression/compat/WindowsInvalid_FromUnix.zip",
+            "System.IO.Compression/compat/WindowsInvalid_FromWindows.zip",
         };
 
         internal class LastModifiedTimes
