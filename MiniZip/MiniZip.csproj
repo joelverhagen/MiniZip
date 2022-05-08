@@ -11,12 +11,12 @@
     <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
 
-    <Version>0.18.0</Version>
+    <Version>0.19.0</Version>
 
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
-    <PackageReleaseNotes>Fix bug related to quoted or unquoted etags held by a CDN or caching layer</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix bug where 404s were causing HTTP retries</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>zip;http;partial;range;mzip;minizip;fetch;directory</PackageTags>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>

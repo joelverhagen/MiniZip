@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -23,7 +24,8 @@ namespace Knapcode.MiniZip
                 {
                     lastException = ex;
 
-                    if (attempt >= maxAttempts)
+                    if (attempt >= maxAttempts ||
+                        (ex is MiniZipHttpException mze && mze.StatusCode == HttpStatusCode.NotFound))
                     {
                         throw;
                     }

@@ -13,6 +13,7 @@ namespace Knapcode.MiniZip
         public class GetReaderAsync : IDisposable
         {
             private Func<HttpRequestMessage, HttpResponseMessage> _getResponse;
+            private readonly TestMessageHandler _testHandler;
             private readonly HttpClient _httpClient;
             private readonly HttpZipProvider _target;
             private readonly Uri _requestUri;
@@ -20,7 +21,8 @@ namespace Knapcode.MiniZip
             public GetReaderAsync()
             {
                 _getResponse = request => new HttpResponseMessage(HttpStatusCode.NotFound);
-                _httpClient = new HttpClient(new TestMessageHandler(r => _getResponse(r)));
+                _testHandler = new TestMessageHandler(r => _getResponse(r));
+                _httpClient = new HttpClient(_testHandler);
                 _target = new HttpZipProvider(_httpClient);
                 _requestUri = new Uri("http://example/foo.zip");
             }
@@ -33,6 +35,22 @@ namespace Knapcode.MiniZip
                 Assert.StartsWith(
                     "The HTTP response did not have a success status code while trying to determine the content length. The response was 404 Not Found.",
                     exception.Message);
+            }
+
+            [Theory]
+            [InlineData(HttpStatusCode.BadRequest, 3)]
+            [InlineData(HttpStatusCode.Unauthorized, 3)]
+            [InlineData(HttpStatusCode.Forbidden, 3)]
+            [InlineData(HttpStatusCode.NotFound, 1)]
+            [InlineData(HttpStatusCode.InternalServerError, 3)]
+            [InlineData(HttpStatusCode.ServiceUnavailable, 3)]
+            public async Task RetiresOnSomeNonSuccessStatusCodes(HttpStatusCode statusCode, int attempts)
+            {
+                _getResponse = request => new HttpResponseMessage(statusCode);
+                var exception = await Assert.ThrowsAsync<MiniZipHttpException>(
+                    () => _target.GetReaderAsync(_requestUri));
+                Assert.Equal(statusCode, exception.StatusCode);
+                Assert.Equal(attempts, _testHandler.RequestCount);
             }
 
             [Fact]
@@ -287,13 +305,18 @@ namespace Knapcode.MiniZip
         {
             private readonly Func<HttpRequestMessage, HttpResponseMessage> _getResponse;
 
+            private int _requestCount = 0;
+
             public TestMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> getResponse)
             {
                 _getResponse = getResponse;
             }
 
+            public int RequestCount => _requestCount;
+
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
+                Interlocked.Increment(ref _requestCount);
                 return Task.FromResult(_getResponse(request));
             }
         }
