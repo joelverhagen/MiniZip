@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text;
 
 namespace Knapcode.MiniZip
 {
@@ -28,12 +29,32 @@ namespace Knapcode.MiniZip
         /// <param name="debugResponse">A string containing debug information about the response.</param>
         /// <param name="innerException">The inner exception.</param>
         public MiniZipHttpException(string message, HttpStatusCode statusCode, string reasonPhrase, string debugResponse, Exception innerException)
+            : this(message, debugRequest: null, statusCode, reasonPhrase, debugResponse, innerException)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the exception.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        /// <param name="debugRequest">A string containing debug information about the request.</param>
+        /// <param name="statusCode">The HTTP status code that caused this exception.</param>
+        /// <param name="reasonPhrase">The reason phrase returned with the <paramref name="statusCode"/>.</param>
+        /// <param name="debugResponse">A string containing debug information about the response.</param>
+        /// <param name="innerException">The inner exception.</param>
+        public MiniZipHttpException(string message, string debugRequest, HttpStatusCode statusCode, string reasonPhrase, string debugResponse, Exception innerException)
             : base(message, innerException)
         {
+            DebugRequest = debugRequest;
             StatusCode = statusCode;
             ReasonPhrase = reasonPhrase;
             DebugResponse = debugResponse;
         }
+
+        /// <summary>
+        /// A string containing debug information about the request.
+        /// </summary>
+        public string DebugRequest { get; }
 
         /// <summary>
         /// The HTTP status code of the response.
@@ -53,12 +74,35 @@ namespace Knapcode.MiniZip
         /// <summary>
         /// Gets a message that describes the current exception.
         /// </summary>
-        public override string Message =>
-            base.Message +
-            Environment.NewLine +
-            Environment.NewLine +
-            "Debug response:" +
-            Environment.NewLine +
-            DebugResponse;
+        public override string Message
+        {
+            get
+            {
+                if (DebugRequest == null && DebugResponse == null)
+                {
+                    return base.Message;
+                }
+
+                var sb = new StringBuilder();
+                sb.AppendLine(base.Message);
+                sb.AppendLine();
+
+                if (DebugRequest != null)
+                {
+                    sb.AppendLine("=== Request ===");
+                    sb.AppendLine(DebugRequest);
+                    sb.AppendLine();
+                }
+
+                if (DebugResponse != null)
+                {
+                    sb.AppendLine("=== Response ===");
+                    sb.AppendLine(DebugResponse);
+                    sb.AppendLine();
+                }
+
+                return sb.ToString();
+            }
+        }
     }
 }
