@@ -32,8 +32,9 @@ namespace Knapcode.MiniZip
                 Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
                 Assert.Equal("Not good request", exception.ReasonPhrase);
                 Assert.Null(exception.InnerException);
+                var nl = Environment.NewLine;
                 Assert.Equal(
-                    "The request failed I guess?\r\n\r\n=== Request ===\r\nPUT https://www.example.com/v3/index.json HTTP/1.1\r\nUser-Agent: my\r\nUser-Agent: fake\r\nUser-Agent: UA\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Header: I'm here too!\r\n\r\nmy test content\nand the second line too.\r\n\r\n=== Response ===\r\nHTTP/1.1 400 Not good request\r\nAge: 777686400\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nThis is the super cool response.\r\n\r\n",
+                    $"The request failed I guess?{nl}{nl}=== Request ==={nl}PUT https://www.example.com/v3/index.json HTTP/1.1\r\nUser-Agent: my\r\nUser-Agent: fake\r\nUser-Agent: UA\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Header: I'm here too!\r\n\r\nmy test content\nand the second line too.{nl}{nl}=== Response ==={nl}HTTP/1.1 400 Not good request\r\nAge: 777686400\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nThis is the super cool response.",
                     exception.Message);
             }
         }

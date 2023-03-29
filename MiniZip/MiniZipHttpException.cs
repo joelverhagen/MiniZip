@@ -90,15 +90,18 @@ namespace Knapcode.MiniZip
                 if (DebugRequest != null)
                 {
                     sb.AppendLine("=== Request ===");
-                    sb.AppendLine(DebugRequest);
-                    sb.AppendLine();
+                    sb.Append(DebugRequest);
+                    if (DebugResponse != null)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine();
+                    }
                 }
 
                 if (DebugResponse != null)
                 {
                     sb.AppendLine("=== Response ===");
-                    sb.AppendLine(DebugResponse);
-                    sb.AppendLine();
+                    sb.Append(DebugResponse);
                 }
 
                 return sb.ToString();
