@@ -11,12 +11,12 @@
     <AssemblyOriginatorKeyFile>..\MiniZip.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
 
-    <Version>0.21.0</Version>
+    <Version>0.21.1</Version>
 
     <Authors>Joel Verhagen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/joelverhagen/MiniZip</PackageProjectUrl>
-    <PackageReleaseNotes>Retry on HTTP timeout</PackageReleaseNotes>
+    <PackageReleaseNotes>Add DLL and NuGet package signing</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>zip;http;partial;range;mzip;minizip;fetch;directory</PackageTags>
     <Description>Read the file listing of a .zip archive without downloading the whole thing.</Description>
